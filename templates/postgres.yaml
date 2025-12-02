@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stargate-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.postgres.storage }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stargate-postgres
+spec:
+  selector:
+    matchLabels:
+      app: stargate-postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: stargate-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.postgres.repository }}:{{ .Values.image.postgres.tag }}"
+          imagePullPolicy: {{ .Values.image.postgres.pullPolicy }}
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.postgres.password | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.database | quote }}
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: stargate-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stargate-postgres
+spec:
+  selector:
+    app: stargate-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

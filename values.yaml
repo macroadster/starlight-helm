@@ -1,0 +1,45 @@
+image:
+  stargate:
+    repository: stargate-backend
+    tag: local
+    pullPolicy: IfNotPresent
+  starlight:
+    repository: starlight-api
+    tag: local2
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: stargate-frontend
+    tag: local
+    pullPolicy: IfNotPresent
+
+postgres:
+  user: stargate
+  password: stargate
+  database: stargate
+  port: 5432
+  storage: 1Gi
+
+stargate:
+  storage: postgres
+  pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable"
+  port: 3001
+  proxyBase: "http://starlight-api:8080"
+  blocksStorage: 1Gi
+  uploadsStorage: 1Gi
+  storageClass: ""
+  ingestToken: ""
+  apiKey: "demo-api-key"
+
+starlight:
+  port: 8080
+  ingestUrl: "http://stargate-backend:3001/api/ingest-inscription"
+  ingestToken: ""
+  apiKey: "demo-api-key"
+  allowAnonymousScan: false
+
+frontend:
+  port: 80

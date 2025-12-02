@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stargate-backend
+spec:
+  selector:
+    matchLabels:
+      app: stargate-backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: stargate-backend
+    spec:
+      containers:
+        - name: stargate
+          image: "{{ .Values.image.stargate.repository }}:{{ .Values.image.stargate.tag }}"
+          imagePullPolicy: {{ .Values.image.stargate.pullPolicy }}
+          env:
+            - name: STARGATE_STORAGE
+              value: {{ .Values.stargate.storage | quote }}
+            - name: STARGATE_PG_DSN
+              value: {{ .Values.stargate.pgDsn | quote }}
+            - name: STARGATE_PROXY_BASE
+              value: {{ .Values.stargate.proxyBase | quote }}
+            - name: BLOCKS_DIR
+              value: /data/blocks
+            - name: STARGATE_INGEST_TOKEN
+              value: {{ .Values.stargate.ingestToken | quote }}
+            - name: STARGATE_API_KEY
+              value: {{ .Values.stargate.apiKey | quote }}
+            - name: UPLOADS_DIR
+              value: /data/uploads
+          volumeMounts:
+            - name: blocks
+              mountPath: /data/blocks
+            - name: uploads
+              mountPath: /data
+          ports:
+            - containerPort: {{ .Values.stargate.port }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.stargate.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.stargate.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: blocks
+          persistentVolumeClaim:
+            claimName: stargate-blocks-pvc
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: stargate-uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stargate-backend
+spec:
+  selector:
+    app: stargate-backend
+  ports:
+    - name: http
+      port: 3001
+      targetPort: {{ .Values.stargate.port }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stargate-blocks-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.stargate.blocksStorage }}
+  {{- if .Values.stargate.storageClass }}
+  storageClassName: {{ .Values.stargate.storageClass | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stargate-uploads-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.stargate.uploadsStorage }}
+  {{- if .Values.stargate.storageClass }}
+  storageClassName: {{ .Values.stargate.storageClass | quote }}
+  {{- end }}

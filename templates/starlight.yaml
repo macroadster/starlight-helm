@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: starlight-api
+spec:
+  selector:
+    matchLabels:
+      app: starlight-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: starlight-api
+    spec:
+      containers:
+        - name: starlight
+          image: "{{ .Values.image.starlight.repository }}:{{ .Values.image.starlight.tag }}"
+          imagePullPolicy: {{ .Values.image.starlight.pullPolicy }}
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: STARGATE_INGEST_URL
+              value: {{ .Values.starlight.ingestUrl | quote }}
+            - name: STARGATE_INGEST_TOKEN
+              value: {{ .Values.starlight.ingestToken | quote }}
+            - name: STARGATE_API_KEY
+              value: {{ .Values.starlight.apiKey | quote }}
+            - name: ALLOW_ANONYMOUS_SCAN
+              value: {{ .Values.starlight.allowAnonymousScan | quote }}
+            - name: BLOCKS_DIR
+              value: /data/blocks
+          ports:
+            - containerPort: {{ .Values.starlight.port }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.starlight.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.starlight.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: blocks
+              mountPath: /data/blocks
+      volumes:
+        - name: blocks
+          persistentVolumeClaim:
+            claimName: stargate-blocks-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: starlight-api
+spec:
+  selector:
+    app: starlight-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: {{ .Values.starlight.port }}
