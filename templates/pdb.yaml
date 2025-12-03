@@ -1,0 +1,21 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: stargate-backend-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: stargate-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: starlight-api-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: starlight-api
+{{- end }}

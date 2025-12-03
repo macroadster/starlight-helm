@@ -26,15 +26,29 @@ spec:
             - name: BLOCKS_DIR
               value: /data/blocks
             - name: STARGATE_INGEST_TOKEN
+              {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.stargateIngestToken) }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: stargate-ingest-token
+                  optional: true
+              {{- else }}
               value: {{ .Values.stargate.ingestToken | quote }}
+              {{- end }}
             - name: STARGATE_API_KEY
+              {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.stargateApiKey) }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: stargate-api-key
+                  optional: true
+              {{- else }}
               value: {{ .Values.stargate.apiKey | quote }}
+              {{- end }}
             - name: UPLOADS_DIR
               value: /data/uploads
           volumeMounts:
-            - name: blocks
-              mountPath: /data/blocks
-            - name: uploads
+            - name: data
               mountPath: /data
           ports:
             - containerPort: {{ .Values.stargate.port }}
@@ -50,18 +64,28 @@ spec:
               port: {{ .Values.stargate.port }}
             initialDelaySeconds: 10
             periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.stargate.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 30
+          resources:
+{{ toYaml .Values.resources.stargate | default "{}" | nindent 12 }}
       volumes:
-        - name: blocks
+        - name: data
           persistentVolumeClaim:
             claimName: stargate-blocks-pvc
-        - name: uploads
-          persistentVolumeClaim:
-            claimName: stargate-uploads-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: stargate-backend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3001"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: stargate-backend
@@ -81,20 +105,6 @@ spec:
   resources:
     requests:
       storage: {{ .Values.stargate.blocksStorage }}
-  {{- if .Values.stargate.storageClass }}
-  storageClassName: {{ .Values.stargate.storageClass | quote }}
-  {{- end }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: stargate-uploads-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.stargate.uploadsStorage }}
   {{- if .Values.stargate.storageClass }}
   storageClassName: {{ .Values.stargate.storageClass | quote }}
   {{- end }}

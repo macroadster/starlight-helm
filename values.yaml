@@ -5,7 +5,7 @@ image:
     pullPolicy: IfNotPresent
   starlight:
     repository: starlight-api
-    tag: local2
+    tag: local
     pullPolicy: IfNotPresent
   postgres:
     repository: postgres
@@ -29,7 +29,6 @@ stargate:
   port: 3001
   proxyBase: "http://starlight-api:8080"
   blocksStorage: 1Gi
-  uploadsStorage: 1Gi
   storageClass: ""
   ingestToken: ""
   apiKey: "demo-api-key"
@@ -43,3 +42,68 @@ starlight:
 
 frontend:
   port: 80
+
+resources:
+  stargate:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  starlight:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  frontend:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  postgres:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+secrets:
+  createDefault: false
+  name: stargate-stack-secrets
+  stargateApiKey: ""
+  stargateIngestToken: ""
+  starlightApiKey: ""
+  starlightIngestToken: ""
+
+hpa:
+  backend:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+  starlight:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+  frontendHost: starlight.local
+  backendHost: stargate.local
+  tls:
+    - secretName: stargate-stack-tls
+      hosts:
+        - starlight.local
+        - stargate.local

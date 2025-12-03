@@ -22,13 +22,36 @@ spec:
             - name: STARGATE_INGEST_URL
               value: {{ .Values.starlight.ingestUrl | quote }}
             - name: STARGATE_INGEST_TOKEN
+              {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.starlightIngestToken) }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: starlight-ingest-token
+                  optional: true
+              {{- else }}
               value: {{ .Values.starlight.ingestToken | quote }}
+              {{- end }}
             - name: STARGATE_API_KEY
+              {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.starlightApiKey) }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: starlight-api-key
+                  optional: true
+              {{- else }}
               value: {{ .Values.starlight.apiKey | quote }}
+              {{- end }}
             - name: ALLOW_ANONYMOUS_SCAN
               value: {{ .Values.starlight.allowAnonymousScan | quote }}
             - name: BLOCKS_DIR
               value: /data/blocks
+          startupProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.starlight.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
           ports:
             - containerPort: {{ .Values.starlight.port }}
           readinessProbe:
@@ -44,10 +67,12 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 20
           volumeMounts:
-            - name: blocks
-              mountPath: /data/blocks
+            - name: data
+              mountPath: /data
+          resources:
+{{ toYaml .Values.resources.starlight | default "{}" | nindent 12 }}
       volumes:
-        - name: blocks
+        - name: data
           persistentVolumeClaim:
             claimName: stargate-blocks-pvc
 ---
@@ -55,6 +80,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: starlight-api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: starlight-api
