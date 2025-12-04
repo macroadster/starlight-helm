@@ -41,6 +41,18 @@ spec:
               {{- else }}
               value: {{ .Values.starlight.apiKey | quote }}
               {{- end }}
+            - name: STARGATE_STEGO_CALLBACK_URL
+              value: {{ .Values.starlight.stegoCallbackUrl | quote }}
+            - name: STARGATE_STEGO_CALLBACK_SECRET
+              {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.starlightStegoCallbackSecret) }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: starlight-stego-callback-secret
+                  optional: true
+              {{- else }}
+              value: {{ .Values.starlight.stegoCallbackSecret | quote }}
+              {{- end }}
             - name: ALLOW_ANONYMOUS_SCAN
               value: {{ .Values.starlight.allowAnonymousScan | quote }}
             - name: BLOCKS_DIR

@@ -39,6 +39,8 @@ starlight:
   ingestToken: ""
   apiKey: "demo-api-key"
   allowAnonymousScan: false
+  stegoCallbackUrl: "http://stargate-backend:3001/api/stego/callback"
+  stegoCallbackSecret: ""
 
 frontend:
   port: 80
@@ -80,6 +82,7 @@ secrets:
   stargateIngestToken: ""
   starlightApiKey: ""
   starlightIngestToken: ""
+  starlightStegoCallbackSecret: ""
 
 hpa:
   backend:

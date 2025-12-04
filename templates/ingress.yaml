@@ -23,6 +23,34 @@ spec:
                 name: stargate-frontend
                 port:
                   number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
+          - path: /bitcoin
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
+          - path: /stego
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
+          - path: /uploads
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
