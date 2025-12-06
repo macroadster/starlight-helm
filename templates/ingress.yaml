@@ -58,6 +58,13 @@ spec:
                 name: stargate-backend
                 port:
                   number: 3001
+          - path: /mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-mcp
+                port:
+                  number: {{ .Values.mcp.port }}
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
@@ -70,7 +77,26 @@ spec:
                 name: stargate-backend
                 port:
                   number: 3001
-{{- end }}
+          - path: /mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-mcp
+                port:
+                  number: {{ .Values.mcp.port }}
+  {{- end }}
+  {{- if .Values.ingress.mcpHost }}
+    - host: {{ .Values.ingress.mcpHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-mcp
+                port:
+                  number: {{ .Values.mcp.port }}
+  {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
 {{ toYaml .Values.ingress.tls | indent 4 }}

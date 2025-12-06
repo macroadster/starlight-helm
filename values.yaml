@@ -7,6 +7,10 @@ image:
     repository: starlight-api
     tag: local
     pullPolicy: IfNotPresent
+  mcp:
+    repository: stargate-mcp
+    tag: local
+    pullPolicy: IfNotPresent
   postgres:
     repository: postgres
     tag: "15"
@@ -42,6 +46,14 @@ starlight:
   stegoCallbackUrl: "http://stargate-backend:3001/api/stego/callback"
   stegoCallbackSecret: ""
 
+mcp:
+  port: 3002
+  claimTtlHours: 72
+  store: memory # memory | postgres
+  pgDsn: ""
+  seedFixtures: true
+  apiKey: ""
+
 frontend:
   port: 80
 
@@ -60,6 +72,13 @@ resources:
     limits:
       cpu: 1
       memory: 2Gi
+  mcp:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
   frontend:
     requests:
       cpu: 50m
@@ -105,8 +124,10 @@ ingress:
     nginx.ingress.kubernetes.io/enable-access-log: "true"
   frontendHost: starlight.local
   backendHost: stargate.local
+  mcpHost: mcp.local
   tls:
     - secretName: stargate-stack-tls
       hosts:
         - starlight.local
         - stargate.local
+        - mcp.local

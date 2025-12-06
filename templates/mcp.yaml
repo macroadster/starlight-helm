@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stargate-mcp
+spec:
+  selector:
+    matchLabels:
+      app: stargate-mcp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: stargate-mcp
+    spec:
+      containers:
+        - name: stargate-mcp
+          image: "{{ .Values.image.mcp.repository }}:{{ .Values.image.mcp.tag }}"
+          imagePullPolicy: {{ .Values.image.mcp.pullPolicy }}
+          env:
+            - name: MCP_PORT
+              value: {{ .Values.mcp.port | quote }}
+            - name: MCP_DEFAULT_CLAIM_TTL_HOURS
+              value: {{ .Values.mcp.claimTtlHours | quote }}
+            - name: MCP_STORE_DRIVER
+              value: {{ .Values.mcp.store | quote }}
+            - name: MCP_PG_DSN
+              value: {{ .Values.mcp.pgDsn | quote }}
+            - name: MCP_SEED_FIXTURES
+              value: {{ .Values.mcp.seedFixtures | quote }}
+            - name: MCP_API_KEY
+              value: {{ .Values.mcp.apiKey | quote }}
+          ports:
+            - containerPort: {{ .Values.mcp.port }}
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.mcp.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.mcp.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+{{ toYaml .Values.resources.mcp | default "{}" | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stargate-mcp
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.mcp.port }}"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: stargate-mcp
+  ports:
+    - name: http
+      port: {{ .Values.mcp.port }}
+      targetPort: {{ .Values.mcp.port }}
