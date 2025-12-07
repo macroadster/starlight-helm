@@ -47,6 +47,26 @@ spec:
               {{- end }}
             - name: UPLOADS_DIR
               value: /data/uploads
+            - name: MCP_STORE_DRIVER
+              value: {{ .Values.mcp.store | quote }}
+            - name: MCP_DEFAULT_CLAIM_TTL_HOURS
+              value: {{ .Values.mcp.claimTtlHours | quote }}
+            - name: MCP_API_KEY
+              value: {{ .Values.mcp.apiKey | quote }}
+            - name: MCP_SEED_FIXTURES
+              value: {{ .Values.mcp.seedFixtures | quote }}
+            - name: MCP_ENABLE_INGEST_SYNC
+              value: {{ .Values.mcp.enableIngestSync | quote }}
+            - name: MCP_ENABLE_FUNDING_SYNC
+              value: {{ .Values.mcp.enableFundingSync | quote }}
+            - name: MCP_FUNDING_PROVIDER
+              value: {{ .Values.mcp.fundingProvider | quote }}
+            - name: MCP_FUNDING_API_BASE
+              value: {{ .Values.mcp.fundingApiBase | quote }}
+            - name: MCP_PGDSN
+              value: {{ .Values.mcp.pgDsn | quote }}
+            - name: MCP_INGEST_SYNC_INTERVAL
+              value: {{ .Values.mcp.ingestSyncInterval | quote }}
           volumeMounts:
             - name: data
               mountPath: /data

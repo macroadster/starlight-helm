@@ -227,6 +227,38 @@ curl -X POST "http://localhost:8080/inscribe" \
   -F "method=lsb"
 ```
 
+## CI Automation for Mocked Contracts and Ingestion
+
+For continuous integration (CI) environments or local development where you need to simulate contracts and proposal ingestion, you can leverage the following settings:
+
+### Mocked Contracts and Tasks
+
+To automatically load a set of demo contracts and tasks into the system on startup, configure the following in your `values.yaml`:
+
+- \`mcp.seedFixtures\`: Set this to \`true\`. When enabled, the MCP (Master Control Program) component of the Stargate backend will, upon initialization, check if the \`mcp_contracts\` and \`mcp_tasks\` database tables are empty. If they are, it will populate them with predefined demo data.
+
+  \`\`\`yaml
+  mcp:
+    seedFixtures: true # Set to true to load demo contracts and tasks
+  \`\`\`
+
+  The demo data is defined in the Stargate source code at \`stargate/backend/mcp/fixtures.go\`. If you require custom mock data for your tests, you would typically modify this source file or implement a mechanism to override it.
+
+### Mocked Ingestion of Proposals
+
+The system ingests proposals by polling for "pending" records from the \`starlight_ingestions\` service. While there isn't a direct "mocking" flag for ingestion similar to \`seedFixtures\`, you can simulate proposal ingestion in your CI environment by:
+
+1.  **Creating Pending Ingestion Records**: In your CI setup, you would programmatically insert records into the \`starlight_ingestions\` service/database with a "pending" status. These records represent the proposals you want to be ingested.
+2.  **Using Markdown Proposals**: The ingestion sync service can parse proposals from Markdown strings. You can craft specific Markdown content (potentially embedded within the ingestion record metadata) to define your mock proposals.
+3.  **Controlling Default Values**: You can influence the default budget and funding address for ingested proposals using environment variables:
+
+    - \`MCP_DEFAULT_BUDGET_SATS\`: Set this environment variable to define a default budget in satoshis for proposals that don't specify one.
+    - \`MCP_DEFAULT_FUNDING_ADDRESS\`: Set this environment variable to define a default funding address for proposals.
+
+    These environment variables can be set directly in your deployment configuration (e.g., in a \`Deployment\` manifest or via Helm's \`--set\` flag) for the Stargate backend.
+
+These settings provide a robust way to test your Starlight cluster's behavior with predefined contracts and proposals in an automated fashion.
+
 ## Troubleshooting
 
 ### 403/401 Authentication Errors
