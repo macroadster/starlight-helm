@@ -58,12 +58,26 @@ spec:
                 name: stargate-backend
                 port:
                   number: 3001
+          - path: /mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
       http:
         paths:
           - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stargate-backend
+                port:
+                  number: 3001
+          - path: /mcp
             pathType: Prefix
             backend:
               service:

@@ -63,7 +63,7 @@ spec:
               value: {{ .Values.mcp.fundingProvider | quote }}
             - name: MCP_FUNDING_API_BASE
               value: {{ .Values.mcp.fundingApiBase | quote }}
-            - name: MCP_PGDSN
+            - name: MCP_PG_DSN
               value: {{ .Values.mcp.pgDsn | quote }}
             - name: MCP_INGEST_SYNC_INTERVAL
               value: {{ .Values.mcp.ingestSyncInterval | quote }}
