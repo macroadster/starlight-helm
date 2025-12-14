@@ -32,6 +32,7 @@ stargate:
   storageClass: ""
   ingestToken: ""
   apiKey: "demo-api-key"
+  bitcoinNetwork: "mainnet"
 mcp:
   claimTtlHours: 72
   store: postgres  # Enable PostgreSQL storage

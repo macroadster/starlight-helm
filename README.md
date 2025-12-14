@@ -50,6 +50,7 @@ curl http://localhost:8080/health
 - Storage: one PVC (`stargate-blocks-pvc`) shared at `/data` by Stargate and Starlight for both blocks and uploads. Size controlled by `stargate.blocksStorage`, and `stargate.storageClass` can set a specific class.
 - `stargate.storage`: `postgres` or `filesystem` (default `postgres`)
 - `stargate.pgDsn`: DSN pointing to the Postgres service (`postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable`)
+- `stargate.bitcoinNetwork`: Bitcoin network to use (`mainnet` or `testnet`, default `mainnet`)
 - `mcp.port`: MCP HTTP port (default `3002`)
 - `mcp.claimTtlHours`: claim expiry window exposed to clients (default `72`)
 - `mcp.store`: `memory` (default) or `postgres`
@@ -165,6 +166,17 @@ helm install starlight-stack . \
 
 # Production installation with secrets (recommended)
 helm install starlight-stack . \
+  --set secrets.createDefault=false \
+  --set secrets.name=stargate-stack-secrets \
+  --set secrets.starlightApiKey=true \
+  --set secrets.starlightIngestToken=true \
+  --set secrets.stargateApiKey=true \
+  --set secrets.stargateIngestToken=true \
+  --set secrets.starlightStegoCallbackSecret=true
+
+# For testnet deployment
+helm install starlight-stack . \
+  --set stargate.bitcoinNetwork=testnet \
   --set secrets.createDefault=false \
   --set secrets.name=stargate-stack-secrets \
   --set secrets.starlightApiKey=true \

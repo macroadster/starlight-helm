@@ -23,6 +23,8 @@ spec:
               value: {{ .Values.stargate.pgDsn | quote }}
             - name: STARGATE_PROXY_BASE
               value: {{ .Values.stargate.proxyBase | quote }}
+            - name: BITCOIN_NETWORK
+              value: {{ .Values.stargate.bitcoinNetwork | quote }}
             - name: BLOCKS_DIR
               value: /data/blocks
             - name: STARGATE_INGEST_TOKEN
