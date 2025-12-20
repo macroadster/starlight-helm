@@ -69,6 +69,8 @@ spec:
               value: {{ .Values.mcp.pgDsn | quote }}
             - name: MCP_INGEST_SYNC_INTERVAL
               value: {{ .Values.mcp.ingestSyncInterval | quote }}
+            - name: STARLIGHT_DONATION_ADDRESS
+              value: {{ .Values.stargate.donationAddress | quote }}
           volumeMounts:
             - name: data
               mountPath: /data
