@@ -1,11 +1,11 @@
 image:
   stargate:
     repository: stargate-backend
-    tag: local
+    tag: latest
     pullPolicy: IfNotPresent
   starlight:
     repository: starlight-api
-    tag: local
+    tag: latest
     pullPolicy: IfNotPresent
   postgres:
     repository: postgres
@@ -13,7 +13,7 @@ image:
     pullPolicy: IfNotPresent
   frontend:
     repository: stargate-frontend
-    tag: local
+    tag: latest
     pullPolicy: IfNotPresent
 
 postgres:

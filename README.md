@@ -37,14 +37,13 @@ curl http://localhost:8080/health
 ## Requirements
 - Docker/Helm/Kubectl access to a cluster (kind/minikube OK).
 - Images available locally or in a registry:
-  - `stargate-backend:local` (built from `/Users/eric/sandbox/stargate/backend/Dockerfile`)
-  - `starlight-api:local` (you may need to build/push separately)
-  - `stargate-mcp:local` (built from `/Users/eric/sandbox/stargate/backend/Dockerfile.mcp`)
+  - `stargate-frontend:latest` (built from `stargate/frontend/Dockerfile`)
+  - `stargate-backend:latest` (built from `stargate/backend/Dockerfile`)
+  - `starlight-api:latest` (built from `starlight/Dockerfile`)
 
 ## Values
-- `image.stargate.repository` / `tag`: Stargate backend image (default `stargate-backend:local`)
-- `image.starlight.repository` / `tag`: Starlight API image (default `starlight-api:local`)
-- `image.mcp.repository` / `tag`: Stargate MCP server image (default `stargate-mcp:local`)
+- `image.stargate.repository` / `tag`: Stargate backend image (default `stargate-backend:latest`)
+- `image.starlight.repository` / `tag`: Starlight API image (default `starlight-api:latest`)
 - `image.postgres.repository` / `tag`: Postgres (default `postgres:15`)
 - `postgres.*`: credentials/PVC size
 - Storage: one PVC (`stargate-blocks-pvc`) shared at `/data` by Stargate and Starlight for both blocks and uploads. Size controlled by `stargate.blocksStorage`, and `stargate.storageClass` can set a specific class.
@@ -58,24 +57,23 @@ curl http://localhost:8080/health
 - `mcp.seedFixtures`: whether to load seed contracts/tasks on startup (default `true`)
 - `mcp.apiKey`: optional API key required via header `X-API-Key`
 - `ingress.enabled`: optional Ingress (defaults: frontend `starlight.local`, backend `stargate.local`; set `ingress.className`/`annotations`/`tls` as needed; defaults force SSL redirect and 10m body size)
-- `ingress.mcpHost`: optional dedicated host for MCP (default `mcp.local`)
 - `resources.*`: set requests/limits for all components (defaults provided)
 - `hpa.*`: optional HPAs for backend and starlight (disabled by default)
 - `secrets.*`: optionally create/use a secret for API keys/tokens (`stargate-stack-secrets` with keys: `stargate-api-key`, `stargate-ingest-token`, `starlight-api-key`, `starlight-ingest-token`, `starlight-stego-callback-secret`)
 
 ## Build images (local)
 ```bash
+# Stargate frontend
+cd stargate/frontend
+docker build -t stargate-frontend:latest .
+
 # Stargate backend
-cd /Users/eric/sandbox/stargate/backend
-docker build -t stargate-backend:local .
+cd stargate/backend
+docker build -t stargate-backend:latest .
 
 # Starlight API (if not available)
-cd /Users/eric/sandbox/starlight
-docker build -t starlight-api:local .
-
-# Stargate MCP server
-cd /Users/eric/sandbox/stargate/backend
-docker build -f Dockerfile.mcp -t stargate-mcp:local .
+cd starlight
+docker build -t starlight-api:latest .
 ```
 
 ## Secrets Setup (Required for Production)
@@ -160,9 +158,9 @@ cd /Users/eric/sandbox/starlight-helm
 # Basic installation (without secrets - not recommended for production)
 helm install starlight-stack . \
   --set image.stargate.repository=stargate-backend \
-  --set image.stargate.tag=local \
+  --set image.stargate.tag=latest \
   --set image.starlight.repository=starlight-api \
-  --set image.starlight.tag=local
+  --set image.starlight.tag=latest
 
 # Production installation with secrets (recommended)
 helm install starlight-stack . \
@@ -193,18 +191,16 @@ helm upgrade --install starlight-stack . \
   --set ingress.className=nginx
 
 # For local ingress testing (docker-desktop/minikube with ingress-nginx), add to /etc/hosts:
-# 127.0.0.1 stargate.local starlight.local mcp.local
-# TLS: default values expect a secret `stargate-stack-tls` with SANs stargate.local, starlight.local, mcp.local
+# 127.0.0.1 stargate.local starlight.local 
+# TLS: default values expect a secret `stargate-stack-tls` with SANs stargate.local, starlight.local,
 #   kubectl create secret tls stargate-stack-tls --cert=stargate-stack.crt --key=stargate-stack.key
 # Then hit:
 # curl -kI https://stargate.local/   # backend
 # curl -kI https://starlight.local/  # frontend
-# curl -kI https://mcp.local/healthz # MCP server
 
 # Observability
 # - Backend metrics: https://stargate.local/metrics (prometheus format)
 # - Starlight metrics: https://stargate.local/metrics if proxied or service scrape on port 8080 (/metrics)
-# - MCP metrics: https://mcp.local/metrics
 # - Service annotations included for Prometheus auto-scrape (prometheus.io/scrape=true)
 ```
 
@@ -217,17 +213,14 @@ kubectl get pods
 kubectl get svc stargate-backend starlight-api stargate-postgres stargate-mcp
 
 # Port forward for testing
+kubectl port-forward svc/starlight-frontend 3000:3000 &
 kubectl port-forward svc/stargate-backend 3001:3001 &
 kubectl port-forward svc/starlight-api 8080:8080 &
-kubectl port-forward svc/starlight-mcp 3002:3002 &
 
 # Test health endpoints
+curl http://localhost:3000/health
 curl http://localhost:3001/api/health
 curl http://localhost:8080/health
-curl http://localhost:3002/healthz
-
-# Test MCP with API key (if configured)
-# curl -H "X-API-Key: <key>" http://localhost:3002/mcp/v1/tasks
 
 # Test Starlight inscription (requires authentication)
 # Get API key from secret:
@@ -397,6 +390,7 @@ kubectl delete secret stargate-stack-secrets-new
 # Restart deployments
 kubectl rollout restart deployment/starlight-api
 kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate-frontend
 ```
 
 ## Uninstall
