@@ -1,10 +1,10 @@
 image:
   stargate:
-    repository: stargate-backend
+    repository: macroadster/stargate-backend
     tag: latest
     pullPolicy: IfNotPresent
   starlight:
-    repository: starlight-api
+    repository: macroadster/starlight-api
     tag: latest
     pullPolicy: IfNotPresent
   postgres:
@@ -12,7 +12,7 @@ image:
     tag: "15"
     pullPolicy: IfNotPresent
   frontend:
-    repository: stargate-frontend
+    repository: macroadster/stargate-frontend
     tag: latest
     pullPolicy: IfNotPresent
 
