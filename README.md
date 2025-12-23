@@ -82,7 +82,7 @@ The Starlight ↔ Stargate integration requires authentication tokens for secure
 
 ### Option 1: Automatic Secret Creation (Recommended)
 ```bash
-cd /Users/eric/sandbox/starlight-helm
+cd starlight-helm
 
 # Create secrets with secure random values
 # Note: starlight-api-key and stargate-api-key must match for Stargate → Starlight calls
@@ -153,7 +153,7 @@ helm install starlight-stack . \
 
 ## Install
 ```bash
-cd /Users/eric/sandbox/starlight-helm
+cd starlight-helm
 
 # Basic installation (without secrets - not recommended for production)
 helm install starlight-stack . \
