@@ -44,6 +44,7 @@ curl http://localhost:8080/health
   - `starlight-api:latest` (built from `starlight/Dockerfile`)
 
 ## Values
+- `image.stargateFrontend.repository` / `tag`: Stargate frontend image (default `stargate-frontend:latest`)
 - `image.stargate.repository` / `tag`: Stargate backend image (default `stargate-backend:latest`)
 - `image.starlight.repository` / `tag`: Starlight API image (default `starlight-api:latest`)
 - `image.postgres.repository` / `tag`: Postgres (default `postgres:15`)
@@ -193,12 +194,12 @@ helm upgrade --install starlight-stack . \
   --set ingress.className=nginx
 
 # For local ingress testing (docker-desktop/minikube with ingress-nginx), add to /etc/hosts:
-# 127.0.0.1 stargate.local starlight.local 
-# TLS: default values expect a secret `stargate-stack-tls` with SANs stargate.local, starlight.local,
+# 127.0.0.1 starlight.local stargate.local 
+# TLS: default values expect a secret `stargate-stack-tls` with SANs starlight.local, stargate.local,
 #   kubectl create secret tls stargate-stack-tls --cert=stargate-stack.crt --key=stargate-stack.key
 # Then hit:
-# curl -kI https://stargate.local/   # backend
 # curl -kI https://starlight.local/  # frontend
+# curl -kI https://stargate.local/   # backend
 
 # Observability
 # - Backend metrics: https://stargate.local/metrics (prometheus format)
