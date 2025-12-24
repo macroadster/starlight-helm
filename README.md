@@ -1,5 +1,7 @@
 # Starlight Helm Stack
 
+A complete Bitcoin-native smart contract system that keeps the blockchain safe while enabling useful work. This stack combines AI-powered security that detects hidden data in blockchain images with a full workflow system for proposals, funding, and verified work—all built on Bitcoin with smart contracts, escrow, and dispute resolution.
+
 Minimal chart to run Starlight API, Stargate backend, and Postgres.
 
 ## Quick Start
