@@ -58,6 +58,7 @@ stargate:
 
 ipfs:
   enabled: true
+  enablePubsub: true
   apiPort: 5001
   gatewayPort: 8080
   swarmPort: 4001

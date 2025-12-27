@@ -17,6 +17,11 @@ spec:
         - name: ipfs
           image: "{{ .Values.image.ipfs.repository }}:{{ .Values.image.ipfs.tag }}"
           imagePullPolicy: {{ .Values.image.ipfs.pullPolicy }}
+          args:
+            - daemon
+            {{- if .Values.ipfs.enablePubsub }}
+            - --enable-pubsub-experiment
+            {{- end }}
           ports:
             - name: api
               containerPort: {{ .Values.ipfs.apiPort }}

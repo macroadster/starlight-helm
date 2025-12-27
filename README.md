@@ -65,6 +65,7 @@ curl http://localhost:8080/health
   - `stargate.ipfs.httpTimeoutSec`: IPFS HTTP timeout in seconds (default `30`)
 - `ipfs.*`: optional Kubo (IPFS) deployment for mirroring
   - `ipfs.enabled`: deploy Kubo service (default `true`)
+  - `ipfs.enablePubsub`: enable pubsub experiment for Kubo (default `true`)
   - `ipfs.apiPort` / `gatewayPort` / `swarmPort`: IPFS ports (defaults `5001` / `8080` / `4001`)
   - `ipfs.storage`: PVC size for IPFS repo (default `5Gi`)
   - `ipfs.storageClass`: optional storage class for IPFS PVC
