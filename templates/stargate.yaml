@@ -49,6 +49,24 @@ spec:
               {{- end }}
             - name: UPLOADS_DIR
               value: /data/uploads
+            - name: IPFS_MIRROR_ENABLED
+              value: {{ .Values.stargate.ipfs.mirrorEnabled | quote }}
+            - name: IPFS_MIRROR_UPLOAD_ENABLED
+              value: {{ .Values.stargate.ipfs.mirrorUploadEnabled | quote }}
+            - name: IPFS_MIRROR_DOWNLOAD_ENABLED
+              value: {{ .Values.stargate.ipfs.mirrorDownloadEnabled | quote }}
+            - name: IPFS_API_URL
+              value: {{ .Values.stargate.ipfs.apiUrl | quote }}
+            - name: IPFS_MIRROR_TOPIC
+              value: {{ .Values.stargate.ipfs.mirrorTopic | quote }}
+            - name: IPFS_MIRROR_POLL_INTERVAL_SEC
+              value: {{ .Values.stargate.ipfs.mirrorPollIntervalSec | quote }}
+            - name: IPFS_MIRROR_PUBLISH_INTERVAL_SEC
+              value: {{ .Values.stargate.ipfs.mirrorPublishIntervalSec | quote }}
+            - name: IPFS_MIRROR_MAX_FILES
+              value: {{ .Values.stargate.ipfs.mirrorMaxFiles | quote }}
+            - name: IPFS_HTTP_TIMEOUT_SEC
+              value: {{ .Values.stargate.ipfs.httpTimeoutSec | quote }}
             - name: MCP_STORE_DRIVER
               value: {{ .Values.mcp.store | quote }}
             - name: MCP_DEFAULT_CLAIM_TTL_HOURS
@@ -71,9 +89,18 @@ spec:
               value: {{ .Values.mcp.ingestSyncInterval | quote }}
             - name: STARLIGHT_DONATION_ADDRESS
               value: {{ .Values.stargate.donationAddress | quote }}
+            {{- if .Values.ca.crt }}
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca.crt
+            {{- end }}
           volumeMounts:
             - name: data
               mountPath: /data
+            {{- if .Values.ca.crt }}
+            - name: custom-ca
+              mountPath: /etc/ssl/certs/ca.crt
+              subPath: ca.crt
+            {{- end }}
           ports:
             - containerPort: {{ .Values.stargate.port }}
           readinessProbe:
@@ -101,6 +128,11 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: stargate-blocks-pvc
+        {{- if .Values.ca.crt }}
+        - name: custom-ca
+          secret:
+            secretName: custom-ca
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

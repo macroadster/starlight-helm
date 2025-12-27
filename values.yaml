@@ -34,6 +34,16 @@ stargate:
   apiKey: "demo-api-key"
   bitcoinNetwork: "mainnet"
   donationAddress: ""
+  ipfs:
+    mirrorEnabled: false
+    mirrorUploadEnabled: true
+    mirrorDownloadEnabled: true
+    apiUrl: "http://127.0.0.1:5001"
+    mirrorTopic: "stargate-uploads"
+    mirrorPollIntervalSec: 10
+    mirrorPublishIntervalSec: 30
+    mirrorMaxFiles: 2000
+    httpTimeoutSec: 30
 mcp:
   claimTtlHours: 72
   store: postgres  # Enable PostgreSQL storage
@@ -125,3 +135,11 @@ ingress:
       hosts:
         - starlight.local
         - stargate.local
+
+# Custom CA certificate.
+# Provide the base64-encoded CA certificate content here.
+# For example:
+# ca:
+#   crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
+ca:
+  crt: ""
