@@ -57,36 +57,34 @@ spec:
               value: {{ .Values.starlight.allowAnonymousScan | quote }}
             - name: BLOCKS_DIR
               value: /data/blocks
+            {{- if .Values.ca.crt }}
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca.crt
+            {{- end }}
           startupProbe:
             httpGet:
               path: /health
               port: {{ .Values.starlight.port }}
             initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 30
-          ports:
-            - containerPort: {{ .Values.starlight.port }}
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: {{ .Values.starlight.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: {{ .Values.starlight.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 20
           volumeMounts:
             - name: data
               mountPath: /data
+            {{- if .Values.ca.crt }}
+            - name: custom-ca
+              mountPath: /etc/ssl/certs/ca.crt
+              subPath: ca.crt
+            {{- end }}
           resources:
 {{ toYaml .Values.resources.starlight | default "{}" | nindent 12 }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: stargate-blocks-pvc
+        {{- if .Values.ca.crt }}
+        - name: custom-ca
+          secret:
+            secretName: custom-ca
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service

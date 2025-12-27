@@ -18,6 +18,11 @@ spec:
           imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
           ports:
             - containerPort: 80
+          {{- if .Values.ca.crt }}
+          env:
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca.crt
+          {{- end }}
           readinessProbe:
             httpGet:
               path: /
@@ -32,6 +37,12 @@ spec:
             periodSeconds: 20
           resources:
 {{ toYaml .Values.resources.frontend | default "{}" | nindent 12 }}
+      volumes:
+        {{- if .Values.ca.crt }}
+        - name: custom-ca
+          secret:
+            secretName: custom-ca
+        {{- end }}
 ---
 apiVersion: v1
 kind: Service
