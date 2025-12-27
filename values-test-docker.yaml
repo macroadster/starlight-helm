@@ -1,0 +1,228 @@
+# values-test-docker.yaml
+# This file contains configurations for running the Starlight Helm Stack on Docker Desktop in test namespace.
+
+# -- Image repositories and tags for local development.
+#    These images should be built locally as described in README.md.
+image:
+  frontend:
+    repository: stargate-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  stargate:
+    repository: stargate-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  starlight:
+    repository: starlight-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  ipfs:
+    repository: ipfs/kubo
+    tag: "v0.27.0"
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+
+# -- PostgreSQL settings (using default embedded Postgres)
+postgres:
+  user: stargate
+  password: stargate
+  database: stargate
+  port: 5432
+  storage: 1Gi # Small storage for local development
+
+# -- Stargate backend settings
+stargate:
+  storage: postgres
+  pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable"
+  port: 3001
+  proxyBase: "http://starlight-api:8080" # Points to local starlight-api service
+  blocksStorage: 1Gi # Small storage for local development
+  storageClass: "" # No specific storage class needed for local
+  ingestToken: "" # Will be sourced from secrets if secrets.createDefault is false
+  apiKey: "demo-api-key"      # Will be sourced from secrets if secrets.createDefault is false
+  bitcoinNetwork: "testnet4"
+  donationAddress: "tb1qqyf4y2zeqepmr3fd8gzsal5vhv7tfqjye0lghk"
+  ipfs:
+    mirrorEnabled: true
+    mirrorUploadEnabled: true
+    mirrorDownloadEnabled: true
+    apiUrl: "http://stargate-ipfs:5001"
+    mirrorTopic: "stargate-uploads"
+    mirrorPollIntervalSec: 10
+    mirrorPublishIntervalSec: 30
+    mirrorMaxFiles: 2000
+    httpTimeoutSec: 30
+
+ipfs:
+  enabled: true
+  apiPort: 5001
+  gatewayPort: 8080
+  swarmPort: 4001
+  storage: 2Gi
+  storageClass: ""
+
+# -- MCP (Master Control Program) settings
+mcp:
+  claimTtlHours: 72
+  store: postgres # Use postgres for consistency with production setup
+  pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable"
+  seedFixtures: false # Set to true to load demo contracts and tasks
+  apiKey: "" # Can be empty for local if authentication is disabled, or use a dummy key
+  enableIngestSync: true
+  enableFundingSync: false
+  fundingProvider: ""
+  fundingApiBase: ""
+  ingestSyncInterval: "30s"
+
+# -- Starlight API settings
+starlight:
+  port: 8080
+  ingestUrl: "http://stargate-backend:3001/api/ingest-inscription" # Points to local stargate-backend service
+  ingestToken: "" # Will be sourced from secrets if secrets.createDefault is false
+  apiKey: "demo-api-key"      # Will be sourced from secrets if secrets.createDefault is false
+  allowAnonymousScan: true # Allow anonymous scanning for easier local development
+  stegoCallbackUrl: "http://stargate-backend:3001/api/stego/callback"
+  stegoCallbackSecret: "" # Will be sourced from secrets if secrets.createDefault is false
+
+# -- Frontend settings
+frontend:
+  port: 80
+
+# -- Resource requests and limits for local development (minimal)
+resources:
+  stargate:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  starlight:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  ipfs:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  frontend:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  postgres:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# -- Kubernetes Secrets configuration
+#    For Docker Desktop, you can choose to create secrets manually or let Helm create defaults.
+secrets:
+  createDefault: true # Let Helm create default secrets for convenience
+  name: stargate-stack-secrets
+  stargateApiKey: "demo-api-key"
+  stargateIngestToken: ""
+  starlightApiKey: "demo-api-key"
+  starlightIngestToken: ""
+  starlightStegoCallbackSecret: ""
+
+# -- Horizontal Pod Autoscaler (HPA) settings (disabled for local)
+hpa:
+  backend:
+    enabled: false
+  starlight:
+    enabled: false
+
+# -- Ingress settings for Docker Desktop
+ingress:
+  enabled: true # Enable Ingress for local access
+  className: "nginx" # Assumes nginx ingress controller in Docker Desktop
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" # Force SSL redirect
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m" # Default body size
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+  frontendHost: starlight.test # Test domain
+  backendHost: stargate.test # Test domain
+  tls:
+    - secretName: stargate-stack-tls # Name of the TLS secret provided by user
+      hosts:
+        - starlight.test
+        - stargate.test
+  tlsCrt: |
+    -----BEGIN CERTIFICATE-----
+    MIIEXjCCAsagAwIBAgIQGHs41t2waFowgUkNwZJ6fzANBgkqhkiG9w0BAQsFADCB
+    jTEeMBwGA1UEChMVbWtjZXJ0IGRldmVsb3BtZW50IENBMTEwLwYDVQQLDChlcmlj
+    QE1hYy5oc2QxLmNhLmNvbWNhc3QubmV0IChFcmljIFlhbmcpMTgwNgYDVQQDDC9t
+    a2NlcnQgZXJpY0BNYWMuaHNkMS5jYS5jb21jYXN0Lm5ldCAoRXJpYyBZYW5nKTAe
+    Fw0yNTEyMjcyMjEzMThaFw0yODAzMjcyMTEzMThaMFQxJzAlBgNVBAoTHm1rY2Vy
+    dCBkZXZlbG9wbWVudCBjZXJ0aWZpY2F0ZTEpMCcGA1UECwwgZXJpY0BNYWNCb29r
+    LUFpci5sYW4gKEVyaWMgWWFuZykwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+    AoIBAQDJpswK6m/cWqxlR3j75VKWnkg8qh3T8IKqWIPNalC8BJAAAdbRbRoPSOf4
+    sZxX/4w2v3GF18VUl0fOkOyVa0vds8irFVRpoMCtxm254mPTYUK7EU5UbUW7xpKG
+    cmMGgaSAGQNtLgMQK8a+4eF0Yi9YshjfdOOBO/DRzCvCqgSeWXTdm9wjHywLyIF4
+    uUHeoqcd+3vRfVtkuUCN6T41J8SP5vQyGprIUFK373o45o8V7txJCp97hyZI6u6o
+    EI4UdzOP4xyranxxpjS+Fv9JlQRzCCh/fKZAuZEM49kYe+7sfxioGyWqGGIrUhXD
+    xAgr8XlNLcuzeg4BpSZz0+uOSV/hAgMBAAGjcjBwMA4GA1UdDwEB/wQEAwIFoDAT
+    BgNVHSUEDDAKBggrBgEFBQcDATAfBgNVHSMEGDAWgBTp7jlCxS/BF7WV1zUIxsL5
+    HUnL0zAoBgNVHREEITAfgg5zdGFybGlnaHQudGVzdIINc3RhcmdhdGUudGVzdDAN
+    BgkqhkiG9w0BAQsFAAOCAYEAH+QsY1+UhBapUlPt9WaEEtm2REVDn/ZV1YlleKVb
+    zLwSsiubNwUDVMhOdWb2jgHOPF9MmOrywR2q4UZS+DbK5rGlOHA6ShAXqWbxb9UR
+    8E4qca/B9sDudmHiRvUjFWOnbk6bdTvB6yG62nNMHX0wSNKHPsE7+zUIIMweSNq2
+    cwBqEIuz/kEKLnelkKmkUWu2qjEdy2PUtQCOs9IKqJ69fgGpLVbCxQ6qklS1Thvo
+    NwYfgYPyKKXSlbiqVdE+8MhF3hF3DMTfPfk9qHp4ikUSpyCmSTo0N9QZ4AfHLBRJ
+    4TvH0zY5mxVRr9UI0Ngtvx26RRp5CbgMpAqee61sl4pObsGeFMREbGztnL0ICiqR
+    1uManXeE4b/FVpQmfKRpmZKrYtuwxAZ1Ro00/To4MAhYi0Ggm6sWctfvIZoLRJ5k
+    3WbkQGUFAv5joq4RTLnwyXEOnT60DxQTuCI8b604AQ8ifsTxmdEtiViwbCAYXgjp
+    KlU+veo/o/bJ+/71ohKI/Beb
+    -----END CERTIFICATE-----
+  tlsKey: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDJpswK6m/cWqxl
+    R3j75VKWnkg8qh3T8IKqWIPNalC8BJAAAdbRbRoPSOf4sZxX/4w2v3GF18VUl0fO
+    kOyVa0vds8irFVRpoMCtxm254mPTYUK7EU5UbUW7xpKGcmMGgaSAGQNtLgMQK8a+
+    4eF0Yi9YshjfdOOBO/DRzCvCqgSeWXTdm9wjHywLyIF4uUHeoqcd+3vRfVtkuUCN
+    6T41J8SP5vQyGprIUFK373o45o8V7txJCp97hyZI6u6oEI4UdzOP4xyranxxpjS+
+    Fv9JlQRzCCh/fKZAuZEM49kYe+7sfxioGyWqGGIrUhXDxAgr8XlNLcuzeg4BpSZz
+    0+uOSV/hAgMBAAECggEAA75rx+EZ4hCx5jB5Q836Zk76ftvWsW5j8qcxjUEFzjPU
+    e5eNJja9Ft8O5Xxgr3aQYxzTTf2XTY6AeAqTRePn1O4nUdvTxSFFqoRGWb7lBRHn
+    dAMqfeFIe+fAJSxe/8os5G7ydBa4WlbBuh4F+kvvXplx4kYwih/zhOWiQ1s2Oj1c
+    /jGY8W2awpWV/QSjs2ycqe9t1cDAfdZWiXPuY16Lo2u4Vv4+7Zci4GpgVpjU+AYP
+    7uYoafG2HB6HPbkbSC2Ry8SK4C4Hk3aJKBXxd9vfIguSqaQoUIZQvRsct7lMqnc0
+    CfpmSEQBQ74wdD7u75ngvg/OEhLOWmMKEabQLJxkpQKBgQDX0nvrKpfPsrtBjLwv
+    eG4Q2VIZzscO5dfuHLAaWmX7M9NDvbG5W6uztjV9fOmOZ4v+XQo2paPoT6VolAiu
+    2EJDXTTPbTS/LGk5xq+jQu8YwgAiK4ApcWg4bQYpn7z7V4BABriO1zGeAVBkj1Fc
+    GXB7yCWnHUjDxIWcJsWytlPA1QKBgQDvMPoldZl3w87MmkZ0Rdf+dQiHyoSYAlx7
+    q+DBHYTtgJxJeS2eLz8PIyBYKEENVdr1tHAQco3cwOipvXwP/MA57HFBrVG4icBZ
+    CmxzQ4n+A3amSiKvDmjNdrZTZ7M+vjVJDJhX4Wk0rJE/FBIP2Hk9EnX+oryxc0U1
+    5E2JEsBI3QKBgQCjRTW/23ILi3AED97Rnq7NikqFAZwvlgu7s/I5jYe2+SbrCVep
+    HUOQ6dgffd8Gfyk2Hda7LqYH+jDtI4hKFYpTgfCQt1H/Ci70qW13+gv9U85cC0Ki
+    l4u7nCbcWF7UWgbI6Qy36u47VU0nNhDbttcUnX52pT3F9CcL0X0gTLShnQKBgQCy
+    S7vrOGIRmHAKq+Vgvr9m+i5Fqnx0Iy51MYXz7eEsePYG/sE2bNmAmxp9HGSBYEI7
+    bSkr2XhN2a6U+J4F/M39X3Z9EokcGfK7bL2yneG66zICerin7QHKRndabK58UqS9
+    sxnMSEZ38TrD3l4oWaDmGWDDUuN9EwPATFJPnx6eMQKBgEMo1IiMnHMshho6f1gz
+    2fRx5+L+tjrHrfzlGa9tkhn529d3Cp/XxBD+H8TXrFCFp0eQ0Z6Gx8idAWJjIFzk
+    +9itYxnLkbNluE6BCiqP5IsINZxu0fG7EVpG26b8zVtUZFO9zc+cXld90WwNf+Qw
+    nJGnXrjZYoDZuWrsb1V7+6DS
+    -----END PRIVATE KEY-----
+
+# Custom CA certificate.
+# Provide the base64-encoded CA certificate content here.
+# For example:
+# ca:
+#   crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
+ca:
+  crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUU3RENDQTFTZ0F3SUJBZ0lSQU9VY0phMXBJdW4yL2ZNR0MwakdPTjB3RFFZSktvWklodmNOQVFFTEJRQXcKZ1kweEhqQWNCZ05WQkFvVEZXMXJZMlZ5ZENCa1pYWmxiRzl3YldWdWRDQkRRVEV4TUM4R0ExVUVDd3dvWlhKcApZMEJOWVdNdWFITmtNUzVqWVM1amIyMWpZWE4wTG01bGRDQW9SWEpwWXlCWllXNW5LVEU0TURZR0ExVUVBd3d2CmJXdGpaWEowSUdWeWFXTkFUV0ZqTG1oelpERXVZMkV1WTI5dFkyRnpkQzV1WlhRZ0tFVnlhV01nV1dGdVp5a3cKSGhjTk1qVXhNakF5TWpNMU9USTVXaGNOTXpVeE1qQXlNak0xT1RJNVdqQ0JqVEVlTUJ3R0ExVUVDaE1WYld0agpaWEowSUdSbGRtVnNiM0J0Wlc1MElFTkJNVEV3THdZRFZRUUxEQ2hsY21salFFMWhZeTVvYzJReExtTmhMbU52CmJXTmhjM1F1Ym1WMElDaEZjbWxqSUZsaGJtY3BNVGd3TmdZRFZRUUREQzl0YTJObGNuUWdaWEpwWTBCTllXTXUKYUhOa01TNWpZUzVqYjIxallYTjBMbTVsZENBb1JYSnBZeUJaWVc1bktUQ0NBYUl3RFFZSktvWklodmNOQVFFQgpCUUFEZ2dHUEFEQ0NBWW9DZ2dHQkFNNDN3V214QmJuYmM5ZktuS1lTYXVwZUh4UUJjcDRFbU9IcThudHQxNU5lCjB3TGhPdllBRlNFSzQ0TjJ3ZHBVQUNWdnVIV08zZ0g0dSttR0dENGpmQVdRbHUySWFTYXpDaTFWRy83NFZHZ3QKNW1sVFIxS3YrQ016c05laDRZWjN2OFBmWU5DL0RrOTZBZG9ZK0FnSW9vZk14b3JWZzJSQ2xVTWZWOHpjb1lnZQpKR0Nad0ZyVmxpeFdWaUx6enVnWWFWcWUyVDNtKzVTVi83Z08xcWY2cEhMU2UxSVBMMXVuMVZNdUowdzU3Mm9JCjZrZmxVSmgzQVk1SEhUSlA0bmxJRC9Ka1liMEgxOVkwUFN3MFh6bVc1Rk1KUnZEVldhYUU3VDZFTHQwVFFnbVUKb2ZsSlZMdmRiNU8wYkZ5QVFBU21tQ2RHZTJJL1JnMnowYUhNWkNPbFVaU3NVaHBqa3lZMDJ3Z1YvbnlRcEd1Ygo4NUFYWHRZemdNL3ZINHZqUUNKQlIrZzllZzBNWFJnajNVN0tLN29BNWVNREpVaklxQ2tEeEFaemZTZ3U2Y250CjBJS1FmSkVNbGFLMVZ1dzlGMDg2V0FKUW5yR1RpbE1meVYrQlhncFFCOHBOdElNWlNMV3I5bHZDVlVwR0x3NlAKUDVsWFBFVmY0ZmR5aFFwVVlMNXBUUUlEQVFBQm8wVXdRekFPQmdOVkhROEJBZjhFQkFNQ0FnUXdFZ1lEVlIwVApBUUgvQkFnd0JnRUIvd0lCQURBZEJnTlZIUTRFRmdRVTZlNDVRc1V2d1JlMWxkYzFDTWJDK1IxSnk5TXdEUVlKCktvWklodmNOQVFFTEJRQURnZ0dCQUN1TTlQVzNwOWh0bEU0a0FOelNvalozS1M3OXdES25TRFk4OW5nVkNzK2EKNWlvUHVRNFNOTWowSEk4N0lOTmxFSWU4aERSUXRPM3JYazdxU2hsQXNHUXZtTHc2M1BPU1NDamFwTzA4a28xWgpEcHZ2R2hSU2ROR1dYS0FvQjBNTkdwRjdKTzB2cHhhMjNwSkNkSXlBRW9GYUpzZzZzN3Z3dkNSWmpvWUpqMXlVClJZMTlzeXpzKzh2b0dpcGtBSjM3ZmtKZ1BjTWIrOE1zWXNkeEFPTE8raVBRaWtXTWt6bHBFcFhsSE9XYnNuclIKVFhBWU5JOHlQbzJ0bkFuNmZBNEVSeGpUeXE1UGJqYlpQUDdua...

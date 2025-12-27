@@ -57,12 +57,17 @@ curl http://localhost:8080/health
   - `stargate.ipfs.mirrorEnabled`: enable IPFS mirror (default `false`)
   - `stargate.ipfs.mirrorUploadEnabled`: publish local uploads to IPFS (default `true`)
   - `stargate.ipfs.mirrorDownloadEnabled`: fetch uploads announced by peers (default `true`)
-  - `stargate.ipfs.apiUrl`: IPFS HTTP API base URL (default `http://127.0.0.1:5001`)
+  - `stargate.ipfs.apiUrl`: IPFS HTTP API base URL (default `http://stargate-ipfs:5001`)
   - `stargate.ipfs.mirrorTopic`: PubSub topic for sync announcements (default `stargate-uploads`)
   - `stargate.ipfs.mirrorPollIntervalSec`: local scan interval in seconds (default `10`)
   - `stargate.ipfs.mirrorPublishIntervalSec`: manifest publish interval in seconds (default `30`)
   - `stargate.ipfs.mirrorMaxFiles`: max files in manifest (default `2000`)
   - `stargate.ipfs.httpTimeoutSec`: IPFS HTTP timeout in seconds (default `30`)
+- `ipfs.*`: optional Kubo (IPFS) deployment for mirroring
+  - `ipfs.enabled`: deploy Kubo service (default `true`)
+  - `ipfs.apiPort` / `gatewayPort` / `swarmPort`: IPFS ports (defaults `5001` / `8080` / `4001`)
+  - `ipfs.storage`: PVC size for IPFS repo (default `5Gi`)
+  - `ipfs.storageClass`: optional storage class for IPFS PVC
 - `mcp.port`: MCP HTTP port (default `3002`)
 - `mcp.claimTtlHours`: claim expiry window exposed to clients (default `72`)
 - `mcp.store`: `memory` (default) or `postgres`

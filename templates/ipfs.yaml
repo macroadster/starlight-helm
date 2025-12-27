@@ -1,0 +1,68 @@
+{{- if .Values.ipfs.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stargate-ipfs
+spec:
+  selector:
+    matchLabels:
+      app: stargate-ipfs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: stargate-ipfs
+    spec:
+      containers:
+        - name: ipfs
+          image: "{{ .Values.image.ipfs.repository }}:{{ .Values.image.ipfs.tag }}"
+          imagePullPolicy: {{ .Values.image.ipfs.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: {{ .Values.ipfs.apiPort }}
+            - name: gateway
+              containerPort: {{ .Values.ipfs.gatewayPort }}
+            - name: swarm
+              containerPort: {{ .Values.ipfs.swarmPort }}
+          volumeMounts:
+            - name: ipfs-data
+              mountPath: /data/ipfs
+          resources:
+{{ toYaml .Values.resources.ipfs | default "{}" | nindent 12 }}
+      volumes:
+        - name: ipfs-data
+          persistentVolumeClaim:
+            claimName: stargate-ipfs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stargate-ipfs
+spec:
+  selector:
+    app: stargate-ipfs
+  ports:
+    - name: api
+      port: {{ .Values.ipfs.apiPort }}
+      targetPort: {{ .Values.ipfs.apiPort }}
+    - name: gateway
+      port: {{ .Values.ipfs.gatewayPort }}
+      targetPort: {{ .Values.ipfs.gatewayPort }}
+    - name: swarm
+      port: {{ .Values.ipfs.swarmPort }}
+      targetPort: {{ .Values.ipfs.swarmPort }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stargate-ipfs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.ipfs.storage }}
+  {{- if .Values.ipfs.storageClass }}
+  storageClassName: {{ .Values.ipfs.storageClass | quote }}
+  {{- end }}
+{{- end }}

@@ -1,1 +1,2 @@
+{"id":"starlight-helm-58u","title":"Add Kubo (IPFS) deployment to chart","description":"","status":"in_progress","priority":2,"issue_type":"feature","created_at":"2025-12-27T14:51:07.004196-08:00","updated_at":"2025-12-27T14:51:11.724536-08:00"}
 {"id":"starlight-helm-s4e","title":"Document IPFS mirror env vars","description":"","status":"closed","priority":2,"issue_type":"task","created_at":"2025-12-27T14:28:36.86261-08:00","updated_at":"2025-12-27T14:28:56.334665-08:00","closed_at":"2025-12-27T14:28:56.334665-08:00","close_reason":"Documented IPFS mirror values"}

@@ -7,6 +7,10 @@ image:
     repository: macroadster/starlight-api
     tag: latest
     pullPolicy: IfNotPresent
+  ipfs:
+    repository: ipfs/kubo
+    tag: "v0.27.0"
+    pullPolicy: IfNotPresent
   postgres:
     repository: postgres
     tag: "15"
@@ -38,12 +42,20 @@ stargate:
     mirrorEnabled: false
     mirrorUploadEnabled: true
     mirrorDownloadEnabled: true
-    apiUrl: "http://127.0.0.1:5001"
+    apiUrl: "http://stargate-ipfs:5001"
     mirrorTopic: "stargate-uploads"
     mirrorPollIntervalSec: 10
     mirrorPublishIntervalSec: 30
     mirrorMaxFiles: 2000
     httpTimeoutSec: 30
+
+ipfs:
+  enabled: true
+  apiPort: 5001
+  gatewayPort: 8080
+  swarmPort: 4001
+  storage: 5Gi
+  storageClass: ""
 mcp:
   claimTtlHours: 72
   store: postgres  # Enable PostgreSQL storage
@@ -85,6 +97,13 @@ resources:
     limits:
       cpu: 1
       memory: 2Gi
+  ipfs:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   frontend:
     requests:
       cpu: 50m
