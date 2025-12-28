@@ -67,6 +67,36 @@ spec:
               value: {{ .Values.stargate.ipfs.mirrorMaxFiles | quote }}
             - name: IPFS_HTTP_TIMEOUT_SEC
               value: {{ .Values.stargate.ipfs.httpTimeoutSec | quote }}
+            - name: IPFS_INGEST_SYNC_ENABLED
+              value: {{ .Values.stargate.ipfs.ingestSyncEnabled | quote }}
+            - name: IPFS_INGEST_SYNC_INTERVAL_SEC
+              value: {{ .Values.stargate.ipfs.ingestSyncIntervalSec | quote }}
+            - name: IPFS_INGEST_SYNC_MANIFEST
+              value: {{ .Values.stargate.ipfs.ingestSyncManifest | quote }}
+            - name: IPFS_INGEST_SYNC_MAX_ENTRIES
+              value: {{ .Values.stargate.ipfs.ingestSyncMaxEntries | quote }}
+            - name: IPFS_STEGO_TOPIC
+              value: {{ .Values.stargate.ipfs.stegoTopic | quote }}
+            - name: IPFS_STEGO_ANNOUNCE_ENABLED
+              value: {{ .Values.stargate.ipfs.stegoAnnounceEnabled | quote }}
+            - name: IPFS_STEGO_SYNC_ENABLED
+              value: {{ .Values.stargate.ipfs.stegoSyncEnabled | quote }}
+            - name: IPFS_STEGO_SYNC_INTERVAL_SEC
+              value: {{ .Values.stargate.ipfs.stegoSyncIntervalSec | quote }}
+            - name: STARGATE_STEGO_APPROVAL_ENABLED
+              value: {{ .Values.stargate.stego.approvalEnabled | quote }}
+            - name: STARGATE_STEGO_METHOD
+              value: {{ .Values.stargate.stego.method | quote }}
+            - name: STARGATE_STEGO_ISSUER
+              value: {{ .Values.stargate.stego.issuer | quote }}
+            - name: STARGATE_STEGO_INGEST_TIMEOUT_SEC
+              value: {{ .Values.stargate.stego.ingestTimeoutSec | quote }}
+            - name: STARGATE_STEGO_INGEST_POLL_SEC
+              value: {{ .Values.stargate.stego.ingestPollSec | quote }}
+            - name: STARGATE_STEGO_INSCRIBE_TIMEOUT_SEC
+              value: {{ .Values.stargate.stego.inscribeTimeoutSec | quote }}
+            - name: STARGATE_STEGO_SCAN_TIMEOUT_SEC
+              value: {{ .Values.stargate.stego.scanTimeoutSec | quote }}
             - name: MCP_STORE_DRIVER
               value: {{ .Values.mcp.store | quote }}
             - name: MCP_DEFAULT_CLAIM_TTL_HOURS

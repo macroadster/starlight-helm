@@ -48,6 +48,22 @@ stargate:
     mirrorPublishIntervalSec: 30
     mirrorMaxFiles: 2000
     httpTimeoutSec: 30
+    ingestSyncEnabled: false
+    ingestSyncIntervalSec: 60
+    ingestSyncManifest: "stargate-uploads-manifest.json"
+    ingestSyncMaxEntries: 5000
+    stegoTopic: "stargate-stego"
+    stegoAnnounceEnabled: true
+    stegoSyncEnabled: true
+    stegoSyncIntervalSec: 10
+  stego:
+    approvalEnabled: false
+    method: "lsb"
+    issuer: ""
+    ingestTimeoutSec: 30
+    ingestPollSec: 2
+    inscribeTimeoutSec: 60
+    scanTimeoutSec: 30
 
 ipfs:
   enabled: true
