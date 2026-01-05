@@ -80,8 +80,8 @@ mcp:
   seedFixtures: true
   apiKey: ""
   enableIngestSync: true  # Enable ingestion sync
-  enableFundingSync: false
-  fundingProvider: ""
+  enableFundingSync: true
+  fundingProvider: "blockstream"
   fundingApiBase: ""
   ingestSyncInterval: "30s"
 
