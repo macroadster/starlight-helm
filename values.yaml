@@ -68,6 +68,8 @@ stargate:
 ipfs:
   enabled: true
   enablePubsub: true
+  routing: dhtclient
+  profile: lowpower
   apiPort: 5001
   gatewayPort: 8080
   swarmPort: 4001
@@ -117,10 +119,10 @@ resources:
   ipfs:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
   frontend:
     requests:
       cpu: 50m

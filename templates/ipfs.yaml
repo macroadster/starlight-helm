@@ -17,8 +17,12 @@ spec:
         - name: ipfs
           image: "{{ .Values.image.ipfs.repository }}:{{ .Values.image.ipfs.tag }}"
           imagePullPolicy: {{ .Values.image.ipfs.pullPolicy }}
+          env:
+            - name: IPFS_PROFILE
+              value: {{ .Values.ipfs.profile | default "lowpower" | quote }}
           args:
             - daemon
+            - --routing={{ .Values.ipfs.routing | default "dhtclient" }}
             {{- if .Values.ipfs.enablePubsub }}
             - --enable-pubsub-experiment
             {{- end }}
