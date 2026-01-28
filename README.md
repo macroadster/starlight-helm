@@ -85,12 +85,14 @@ curl http://localhost:8080/health
   - `ipfs.apiPort` / `gatewayPort` / `swarmPort`: IPFS ports (defaults `5001` / `8080` / `4001`)
   - `ipfs.storage`: PVC size for IPFS repo (default `5Gi`)
   - `ipfs.storageClass`: optional storage class for IPFS PVC
-- `mcp.port`: MCP HTTP port (default `3002`)
-- `mcp.claimTtlHours`: claim expiry window exposed to clients (default `72`)
-- `mcp.store`: `memory` (default) or `postgres`
-- `mcp.pgDsn`: Postgres DSN when `mcp.store=postgres`
-- `mcp.seedFixtures`: whether to load seed contracts/tasks on startup (default `true`)
-- `mcp.apiKey`: optional API key required via header `X-API-Key`
+- `stargate.claimTtlHours`: claim expiry window exposed to clients (default `72`)
+- `stargate.seedFixtures`: whether to load seed contracts/tasks on startup (default `true`)
+- `stargate.apiKey`: optional API key required via header `X-API-Key`
+- `stargate.enableIngestSync`: enable ingestion sync (default `true`)
+- `stargate.enableFundingSync`: enable funding sync (default `true`)
+- `stargate.fundingProvider`: funding provider (default `blockstream`)
+- `stargate.fundingApiBase`: funding API base URL
+- `stargate.ingestSyncInterval`: ingest sync interval (default `30s`)
 - `ingress.enabled`: optional Ingress (defaults: frontend `starlight.local`, backend `stargate.local`; set `ingress.className`/`annotations`/`tls` as needed; defaults force SSL redirect and 10m body size)
 - `resources.*`: set requests/limits for all components (defaults provided)
 - `hpa.*`: optional HPAs for backend and starlight (disabled by default)
@@ -275,10 +277,10 @@ For continuous integration (CI) environments or local development where you need
 
 To automatically load a set of demo contracts and tasks into the system on startup, configure the following in your `values.yaml`:
 
-- \`mcp.seedFixtures\`: Set this to \`true\`. When enabled, the MCP (Master Control Program) component of the Stargate backend will, upon initialization, check if the \`mcp_contracts\` and \`mcp_tasks\` database tables are empty. If they are, it will populate them with predefined demo data.
+- \`stargate.seedFixtures\`: Set this to \`true\`. When enabled, the Stargate of the Stargate backend will, upon initialization, check if the \`mcp_contracts\` and \`mcp_tasks\` database tables are empty. If they are, it will populate them with predefined demo data.
 
   \`\`\`yaml
-  mcp:
+  stargate:
     seedFixtures: true # Set to true to load demo contracts and tasks
   \`\`\`
 
@@ -292,8 +294,8 @@ The system ingests proposals by polling for "pending" records from the \`starlig
 2.  **Using Markdown Proposals**: The ingestion sync service can parse proposals from Markdown strings. You can craft specific Markdown content (potentially embedded within the ingestion record metadata) to define your mock proposals.
 3.  **Controlling Default Values**: You can influence the default budget and funding address for ingested proposals using environment variables:
 
-    - \`MCP_DEFAULT_BUDGET_SATS\`: Set this environment variable to define a default budget in satoshis for proposals that don't specify one.
-    - \`MCP_DEFAULT_FUNDING_ADDRESS\`: Set this environment variable to define a default funding address for proposals.
+    - \`STARGATE_DEFAULT_BUDGET_SATS\`: Set this environment variable to define a default budget in satoshis for proposals that don't specify one.
+    - \`STARGATE_DEFAULT_FUNDING_ADDRESS\`: Set this environment variable to define a default funding address for proposals.
 
     These environment variables can be set directly in your deployment configuration (e.g., in a \`Deployment\` manifest or via Helm's \`--set\` flag) for the Stargate backend.
 

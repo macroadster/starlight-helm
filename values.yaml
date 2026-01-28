@@ -64,6 +64,13 @@ stargate:
     ingestPollSec: 2
     inscribeTimeoutSec: 60
     scanTimeoutSec: 30
+  claimTtlHours: 72
+  seedFixtures: true
+  enableIngestSync: true  # Enable ingestion sync
+  enableFundingSync: true
+  fundingProvider: "blockstream"
+  fundingApiBase: ""
+  ingestSyncInterval: "30s"
 
 ipfs:
   enabled: true
@@ -75,17 +82,6 @@ ipfs:
   swarmPort: 4001
   storage: 5Gi
   storageClass: ""
-mcp:
-  claimTtlHours: 72
-  store: postgres  # Enable PostgreSQL storage
-  pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/starlight?sslmode=disable"
-  seedFixtures: true
-  apiKey: ""
-  enableIngestSync: true  # Enable ingestion sync
-  enableFundingSync: true
-  fundingProvider: "blockstream"
-  fundingApiBase: ""
-  ingestSyncInterval: "30s"
 
 starlight:
   port: 8080
