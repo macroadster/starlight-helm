@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencode-config
+data:
+  opencode.json: |
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "mcp": {
+        "starlight": {
+          "type": "remote",
+          "url": "{{ .Values.starlight.stargateApiUrl | default "http://stargate-backend:3001" }}/mcp",
+          "enabled": true,
+          "headers": {
+            "X-API-KEY": "{{ .Values.starlight.apiKey }}"
+          }
+        }
+      }
+    }

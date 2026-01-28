@@ -19,6 +19,8 @@ spec:
           env:
             - name: PYTHONUNBUFFERED
               value: "1"
+            - name: STARGATE_API_URL
+              value: {{ .Values.starlight.stargateApiUrl | default "http://stargate-backend:3001" | quote }}
             - name: STARGATE_INGEST_URL
               value: {{ .Values.starlight.ingestUrl | quote }}
             - name: STARGATE_INGEST_TOKEN
@@ -41,6 +43,8 @@ spec:
               {{- else }}
               value: {{ .Values.starlight.apiKey | quote }}
               {{- end }}
+            - name: STARLIGHT_DONATION_ADDRESS
+              value: {{ .Values.stargate.donationAddress | quote }}
             - name: STARGATE_STEGO_CALLBACK_URL
               value: {{ .Values.starlight.stegoCallbackUrl | quote }}
             - name: STARGATE_STEGO_CALLBACK_SECRET
@@ -55,6 +59,8 @@ spec:
               {{- end }}
             - name: ALLOW_ANONYMOUS_SCAN
               value: {{ .Values.starlight.allowAnonymousScan | quote }}
+            - name: UPLOADS_DIR
+              value: /data/uploads
             - name: BLOCKS_DIR
               value: /data/blocks
             {{- if .Values.ca.crt }}
@@ -69,6 +75,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+            - name: opencode-config
+              mountPath: /app/opencode.json
+              subPath: opencode.json
             {{- if .Values.ca.crt }}
             - name: custom-ca
               mountPath: /etc/ssl/certs/ca.crt
@@ -80,6 +89,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: stargate-blocks-pvc
+        - name: opencode-config
+          configMap:
+            name: opencode-config
         {{- if .Values.ca.crt }}
         - name: custom-ca
           secret:
