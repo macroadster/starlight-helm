@@ -65,6 +65,13 @@ spec:
                 name: stargate-backend
                 port:
                   number: 3001
+          - path: /sandbox
+            pathType: Prefix
+            backend:
+              service:
+                name: starlight-api
+                port:
+                  number: 8080
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
