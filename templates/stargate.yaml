@@ -97,26 +97,22 @@ spec:
               value: {{ .Values.stargate.stego.inscribeTimeoutSec | quote }}
             - name: STARGATE_STEGO_SCAN_TIMEOUT_SEC
               value: {{ .Values.stargate.stego.scanTimeoutSec | quote }}
-            - name: MCP_STORE_DRIVER
-              value: {{ .Values.mcp.store | quote }}
-            - name: MCP_DEFAULT_CLAIM_TTL_HOURS
-              value: {{ .Values.mcp.claimTtlHours | quote }}
-            - name: MCP_API_KEY
-              value: {{ .Values.mcp.apiKey | quote }}
-            - name: MCP_SEED_FIXTURES
-              value: {{ .Values.mcp.seedFixtures | quote }}
-            - name: MCP_ENABLE_INGEST_SYNC
-              value: {{ .Values.mcp.enableIngestSync | quote }}
-            - name: MCP_ENABLE_FUNDING_SYNC
-              value: {{ .Values.mcp.enableFundingSync | quote }}
-            - name: MCP_FUNDING_PROVIDER
-              value: {{ .Values.mcp.fundingProvider | quote }}
-            - name: MCP_FUNDING_API_BASE
-              value: {{ .Values.mcp.fundingApiBase | quote }}
-            - name: MCP_PG_DSN
-              value: {{ .Values.mcp.pgDsn | quote }}
-            - name: MCP_INGEST_SYNC_INTERVAL
-              value: {{ .Values.mcp.ingestSyncInterval | quote }}
+
+            - name: STARGATE_DEFAULT_CLAIM_TTL_HOURS
+              value: {{ .Values.stargate.claimTtlHours | quote }}
+            - name: STARGATE_SEED_FIXTURES
+              value: {{ .Values.stargate.seedFixtures | quote }}
+            - name: STARGATE_ENABLE_INGEST_SYNC
+              value: {{ .Values.stargate.enableIngestSync | quote }}
+            - name: STARGATE_ENABLE_FUNDING_SYNC
+              value: {{ .Values.stargate.enableFundingSync | quote }}
+            - name: STARGATE_FUNDING_PROVIDER
+              value: {{ .Values.stargate.fundingProvider | quote }}
+            - name: STARGATE_FUNDING_API_BASE
+              value: {{ .Values.stargate.fundingApiBase | quote }}
+
+            - name: STARGATE_INGEST_SYNC_INTERVAL
+              value: {{ .Values.stargate.ingestSyncInterval | quote }}
             - name: STARLIGHT_DONATION_ADDRESS
               value: {{ .Values.stargate.donationAddress | quote }}
             {{- if .Values.ca.crt }}
