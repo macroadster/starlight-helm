@@ -27,6 +27,8 @@ spec:
               value: {{ .Values.stargate.bitcoinNetwork | quote }}
             - name: BLOCKS_DIR
               value: /data/blocks
+            - name: STARGATE_REQUIRE_IMAGE
+              value: {{ .Values.stargate.requireImage | quote }}
             - name: STARGATE_INGEST_TOKEN
               {{- if and .Values.secrets.name (or .Values.secrets.createDefault .Values.secrets.stargateIngestToken) }}
               valueFrom:

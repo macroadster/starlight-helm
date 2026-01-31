@@ -37,6 +37,7 @@ stargate:
   ingestToken: ""
   apiKey: "demo-api-key"
   bitcoinNetwork: "mainnet"
+  requireImage: true
   donationAddress: ""
   ipfs:
     mirrorEnabled: false
