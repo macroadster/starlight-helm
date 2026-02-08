@@ -40,6 +40,7 @@ stargate:
   requireImage: true
   donationAddress: ""
   ipfs:
+    enabled: true
     mirrorEnabled: false
     mirrorUploadEnabled: true
     mirrorDownloadEnabled: true
@@ -57,7 +58,7 @@ stargate:
     stegoAnnounceEnabled: true
     stegoSyncEnabled: true
     stegoSyncIntervalSec: 10
-  stego:
+    stego:
     approvalEnabled: false
     method: "lsb"
     issuer: ""

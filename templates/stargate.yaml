@@ -115,6 +115,8 @@ spec:
 
             - name: STARGATE_INGEST_SYNC_INTERVAL
               value: {{ .Values.stargate.ingestSyncInterval | quote }}
+            - name: IPFS_ENABLED
+              value: {{ .Values.stargate.ipfs.enabled | quote }}
             - name: STARLIGHT_DONATION_ADDRESS
               value: {{ .Values.stargate.donationAddress | quote }}
             {{- if .Values.ca.crt }}
