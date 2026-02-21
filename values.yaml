@@ -87,6 +87,8 @@ ipfs:
 
 starlight:
   port: 8080
+  watcherEnabled: true
+  workerEnabled: true
   ingestUrl: "http://stargate-backend:3001/api/ingest-inscription"
   ingestToken: ""
   apiKey: "demo-api-key"
