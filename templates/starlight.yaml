@@ -64,9 +64,9 @@ spec:
             - name: BLOCKS_DIR
               value: /data/blocks
             - name: STARLIGHT_WATCHER_ENABLED
-              value: {{ .Values.starlight.watcherEnabled | default true | quote }}
+              value: {{ .Values.starlight.watcherEnabled | quote }}
             - name: STARLIGHT_WORKER_ENABLED
-              value: {{ .Values.starlight.workerEnabled | default true | quote }}
+              value: {{ .Values.starlight.workerEnabled | quote }}
             {{- if .Values.ca.crt }}
             - name: SSL_CERT_FILE
               value: /etc/ssl/certs/ca.crt
