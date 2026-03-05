@@ -69,7 +69,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: starlight-backend
+                name: stargate-backend
                 port:
                   number: 3001
   {{- end }}
