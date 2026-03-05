@@ -69,9 +69,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: starlight-api
+                name: starlight-backend
                 port:
-                  number: 8080
+                  number: 3001
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
