@@ -1,11 +1,11 @@
 image:
   stargate:
     repository: macroadster/stargate-backend
-    tag: latest
+    tag: v1
     pullPolicy: IfNotPresent
   starlight:
     repository: macroadster/starlight-api
-    tag: latest
+    tag: v1
     pullPolicy: IfNotPresent
   ipfs:
     repository: ipfs/kubo
@@ -17,7 +17,7 @@ image:
     pullPolicy: IfNotPresent
   frontend:
     repository: macroadster/stargate-frontend
-    tag: latest
+    tag: v1
     pullPolicy: IfNotPresent
 
 postgres:
