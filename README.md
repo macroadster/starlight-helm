@@ -2,7 +2,7 @@
 
 A complete Bitcoin-native smart contract system that keeps the blockchain safe while enabling useful work. This stack combines AI-powered security that detects hidden data in blockchain images with a full workflow system for proposals, funding, and verified work—all built on Bitcoin with smart contracts, escrow, and dispute resolution.
 
-Minimal chart to run Starlight API, Stargate backend, and Postgres.
+Minimal chart to run Starlight API, Stargate, and Postgres.
 
 ## Quick Start
 
@@ -12,7 +12,7 @@ kubectl create secret generic stargate-stack-secrets \
   --from-literal=starlight-api-key="starlight-api-$(date +%s)-$(openssl rand -hex 8)" \
   --from-literal=starlight-ingest-token="starlight-ingest-$(date +%s)-$(openssl rand -hex 8)" \
   --from-literal=stargate-api-key="starlight-api-$(date +%s)-$(openssl rand -hex 8)" \
-  --from-literal=stargate-ingest-token="stargate-backend-ingest-$(date +%s)-$(openssl rand -hex 8)" \
+  --from-literal=stargate-ingest-token="stargate-ingest-$(date +%s)-$(openssl rand -hex 8)" \
   --from-literal=starlight-stego-callback-secret="stego-callback-$(date +%s)-$(openssl rand -hex 8)"
 
 # 2. Deploy with secrets
@@ -39,13 +39,11 @@ curl http://localhost:8080/health
 ## Requirements
 - Docker/Helm/Kubectl access to a cluster (kind/minikube OK).
 - Images available locally or in a registry:
-  - `stargate-frontend:latest` (built from `stargate/frontend/Dockerfile`)
-  - `stargate-backend:latest` (built from `stargate/backend/Dockerfile`)
+  - `stargate:latest` (built from `stargate/Dockerfile`)
   - `starlight-api:latest` (built from `starlight/Dockerfile`)
 
 ## Values
-- `image.stargateFrontend.repository` / `tag`: Stargate frontend image (default `stargate-frontend:latest`)
-- `image.stargate.repository` / `tag`: Stargate backend image (default `stargate-backend:latest`)
+- `image.stargate.repository` / `tag`: Stargate image (default `macroadster/stargate:v1`)
 - `image.starlight.repository` / `tag`: Starlight API image (default `starlight-api:latest`)
 - `image.postgres.repository` / `tag`: Postgres (default `postgres:15`)
 - `postgres.*`: credentials/PVC size
@@ -100,13 +98,9 @@ curl http://localhost:8080/health
 
 ## Build images (local)
 ```bash
-# Stargate frontend
-cd stargate/frontend
-docker build -t stargate-frontend:latest .
-
-# Stargate backend
-cd stargate/backend
-docker build -t stargate-backend:latest .
+# Stargate
+cd stargate
+docker build -t stargate:latest .
 
 # Starlight API (if not available)
 cd starlight
@@ -171,8 +165,8 @@ helm install starlight-stack . \
 |------------|----------|---------|
 | `starlight-api-key` | Starlight API | Authenticates `/inscribe` and protected endpoints |
 | `starlight-ingest-token` | Starlight API | Token for Stargate ingestion callback |
-| `stargate-api-key` | Stargate Backend | API key for calling Starlight services |
-| `stargate-ingest-token` | Stargate Backend | Token for Stargate ingestion endpoint |
+| `stargate-api-key` | Stargate | API key for calling Starlight services |
+| `stargate-ingest-token` | Stargate | Token for Stargate ingestion endpoint |
 | `starlight-stego-callback-secret` | Starlight API | HMAC secret for steganography detection callbacks |
 
 **Important**: 
@@ -194,7 +188,7 @@ cd starlight-helm
 
 # Basic installation (without secrets - not recommended for production)
 helm install starlight-stack . \
-  --set image.stargate.repository=stargate-backend \
+  --set image.stargate.repository=stargate \
   --set image.stargate.tag=latest \
   --set image.starlight.repository=starlight-api \
   --set image.starlight.tag=latest
@@ -232,8 +226,8 @@ helm upgrade --install starlight-stack . \
 # TLS: default values expect a secret `stargate-stack-tls` with SANs starlight.local, stargate.local,
 #   kubectl create secret tls stargate-stack-tls --cert=stargate-stack.crt --key=stargate-stack.key
 # Then hit:
-# curl -kI https://starlight.local/  # frontend
-# curl -kI https://stargate.local/   # backend
+# curl -kI https://starlight.local/
+# curl -kI https://stargate.local/
 
 # Observability
 # - Backend metrics: https://stargate.local/metrics (prometheus format)
@@ -247,15 +241,13 @@ helm upgrade --install starlight-stack . \
 kubectl get pods
 
 # Check services
-kubectl get svc stargate-backend starlight-api stargate-postgres stargate-mcp
+kubectl get svc stargate starlight-api stargate-postgres
 
 # Port forward for testing
-kubectl port-forward svc/starlight-frontend 3000:3000 &
-kubectl port-forward svc/stargate-backend 3001:3001 &
+kubectl port-forward svc/stargate 3001:3001 &
 kubectl port-forward svc/starlight-api 8080:8080 &
 
 # Test health endpoints
-curl http://localhost:3000/health
 curl http://localhost:3001/api/health
 curl http://localhost:8080/health
 
@@ -312,11 +304,11 @@ These settings provide a robust way to test your Starlight cluster's behavior wi
 echo "Starlight expects:"
 kubectl exec deployment/starlight-api -- env | grep STARGATE_API_KEY
 echo "Stargate sends:"
-kubectl exec deployment/stargate-backend -- env | grep STARGATE_API_KEY
+kubectl exec deployment/stargate -- env | grep STARGATE_API_KEY
 
 # Fix by updating Stargate API key to match Starlight's
 kubectl patch secret stargate-stack-secrets --patch='{"data":{"stargate-api-key":"'$(kubectl get secret stargate-stack-secrets -o jsonpath='{.data.starlight-api-key}')'"}}'
-kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate
 ```
 
 #### Stargate Callback Returns 401 Unauthorized  
@@ -326,12 +318,12 @@ kubectl rollout restart deployment/stargate-backend
 echo "Starlight sends:"
 kubectl exec deployment/starlight-api -- env | grep STARGATE_INGEST_TOKEN
 echo "Stargate expects:"
-kubectl exec deployment/stargate-backend -- env | grep STARGATE_INGEST_TOKEN
+kubectl exec deployment/stargate -- env | grep STARGATE_INGEST_TOKEN
 
 # Fix by updating Stargate ingest token to match Starlight's
 STARLIGHT_INGEST_TOKEN=$(kubectl get secret stargate-stack-secrets -o jsonpath='{.data.starlight-ingest-token}' | base64 -d)
 kubectl patch secret stargate-stack-secrets --patch='{"data":{"stargate-ingest-token":"'$(echo -n "$STARLIGHT_INGEST_TOKEN" | base64)'"}}'
-kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate
 ```
 
 ### 403 Forbidden Errors
@@ -341,11 +333,11 @@ If you get `403 Forbidden` from Starlight `/inscribe` endpoint:
 echo "Starlight expects:"
 kubectl exec deployment/starlight-api -- env | grep STARGATE_API_KEY
 echo "Stargate sends:"
-kubectl exec deployment/stargate-backend -- env | grep STARGATE_API_KEY
+kubectl exec deployment/stargate -- env | grep STARGATE_API_KEY
 
 # Fix by updating Stargate API key to match Starlight's
 kubectl patch secret stargate-stack-secrets --patch='{"data":{"stargate-api-key":"'$(kubectl get secret stargate-stack-secrets -o jsonpath='{.data.starlight-api-key}')'"}}'
-kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate
 ```
 
 ### Callback Issues
@@ -355,12 +347,12 @@ If Starlight → Stargate callbacks fail:
 echo "Starlight sends:"
 kubectl exec deployment/starlight-api -- env | grep STARGATE_INGEST_TOKEN
 echo "Stargate expects:"
-kubectl exec deployment/stargate-backend -- env | grep STARGATE_INGEST_TOKEN
+kubectl exec deployment/stargate -- env | grep STARGATE_INGEST_TOKEN
 
 # Fix token mismatch by updating Stargate to match Starlight
 STARLIGHT_INGEST_TOKEN=$(kubectl get secret stargate-stack-secrets -o jsonpath='{.data.starlight-ingest-token}' | base64 -d)
 kubectl patch secret stargate-stack-secrets --patch='{"data":{"stargate-ingest-token":"'$(echo -n "$STARLIGHT_INGEST_TOKEN" | base64)'"}}'
-kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate
 
 # Test callback endpoint manually
 STARGATE_INGEST_TOKEN=$(kubectl get secret stargate-stack-secrets -o jsonpath='{.data.stargate-ingest-token}' | base64 -d)
@@ -404,7 +396,7 @@ kubectl patch secret stargate-stack-secrets --patch='{"data":{"stargate-api-key"
 
 # Restart deployments to load new secrets
 kubectl rollout restart deployment/starlight-api
-kubectl rollout restart deployment/stargate-backend
+kubectl rollout restart deployment/stargate
 ```
 
 ### Rotate Secrets
@@ -426,8 +418,7 @@ kubectl delete secret stargate-stack-secrets-new
 
 # Restart deployments
 kubectl rollout restart deployment/starlight-api
-kubectl rollout restart deployment/stargate-backend
-kubectl rollout restart deployment/stargate-frontend
+kubectl rollout restart deployment/stargate
 ```
 
 ## Uninstall

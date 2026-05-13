@@ -9,7 +9,7 @@ data:
       "mcp": {
         "starlight": {
           "type": "remote",
-          "url": "{{ .Values.starlight.stargateApiUrl | default "http://stargate-backend:3001" }}/mcp",
+          "url": "{{ .Values.starlight.stargateApiUrl | default "http://stargate:3001" }}/mcp",
           "enabled": true,
           "headers": {
             "X-API-KEY": "{{ .Values.starlight.apiKey }}"

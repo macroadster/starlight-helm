@@ -1,6 +1,6 @@
 image:
   stargate:
-    repository: macroadster/stargate-backend
+    repository: macroadster/stargate
     tag: v1
     pullPolicy: IfNotPresent
   starlight:
@@ -14,10 +14,6 @@ image:
   postgres:
     repository: postgres
     tag: "15"
-    pullPolicy: IfNotPresent
-  frontend:
-    repository: macroadster/stargate-frontend
-    tag: v1
     pullPolicy: IfNotPresent
 
 postgres:
@@ -58,7 +54,7 @@ stargate:
     stegoAnnounceEnabled: true
     stegoSyncEnabled: true
     stegoSyncIntervalSec: 10
-    stego:
+  stego:
     approvalEnabled: false
     method: "lsb"
     issuer: ""
@@ -89,17 +85,14 @@ starlight:
   port: 8080
   watcherEnabled: true
   workerEnabled: true
-  ingestUrl: "http://stargate-backend:3001/api/ingest-inscription"
+  ingestUrl: "http://stargate:3001/api/ingest-inscription"
   ingestToken: ""
   apiKey: "demo-api-key"
   allowAnonymousScan: false
-  stegoCallbackUrl: "http://stargate-backend:3001/api/stego/callback"
+  stegoCallbackUrl: "http://stargate:3001/api/stego/callback"
   stegoCallbackSecret: ""
 
 
-
-frontend:
-  port: 80
 
 resources:
   stargate:
@@ -123,13 +116,6 @@ resources:
     limits:
       cpu: 500m
       memory: 1Gi
-  frontend:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
   postgres:
     requests:
       cpu: 100m
@@ -148,7 +134,7 @@ secrets:
   starlightStegoCallbackSecret: ""
 
 hpa:
-  backend:
+  stargate:
     enabled: false
     minReplicas: 1
     maxReplicas: 3

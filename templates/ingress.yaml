@@ -20,56 +20,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: stargate-frontend
-                port:
-                  number: 80
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /content
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /bitcoin
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /stego
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /uploads
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /mcp
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /sandbox
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
+                name: stargate
                 port:
                   number: 3001
   {{- end }}
@@ -81,14 +32,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: stargate-backend
-                port:
-                  number: 3001
-          - path: /mcp
-            pathType: Prefix
-            backend:
-              service:
-                name: stargate-backend
+                name: stargate
                 port:
                   number: 3001
   {{- end }}

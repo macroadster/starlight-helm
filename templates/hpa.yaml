@@ -1,22 +1,22 @@
-{{- if .Values.hpa.backend.enabled }}
+{{- if .Values.hpa.stargate.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: stargate-backend
+  name: stargate
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: stargate-backend
-  minReplicas: {{ .Values.hpa.backend.minReplicas }}
-  maxReplicas: {{ .Values.hpa.backend.maxReplicas }}
+    name: stargate
+  minReplicas: {{ .Values.hpa.stargate.minReplicas }}
+  maxReplicas: {{ .Values.hpa.stargate.maxReplicas }}
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: {{ .Values.hpa.backend.targetCPU }}
+          averageUtilization: {{ .Values.hpa.stargate.targetCPU }}
 {{- end }}
 ---
 {{- if .Values.hpa.starlight.enabled }}

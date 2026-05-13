@@ -2,12 +2,12 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: stargate-backend-pdb
+  name: stargate-pdb
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: stargate-backend
+      app: stargate
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
