@@ -1,4 +1,39 @@
-{{- if and .Values.ingress.enabled .Values.stargate.ipfs.enabled .Values.ingress.ipfsSwarm.enabled .Values.ingress.ipfsSwarm.tcpConfigMap.create }}
+{{- if and .Values.ingress.ipfsSwarm.enabled .Values.stargate.ipfs.enabled .Values.ingress.ipfsSwarm.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.ingress.ipfsSwarm.service.name | default "stargate-swarm" }}
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: ipfs-swarm
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  {{- with .Values.ingress.ipfsSwarm.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.ingress.ipfsSwarm.service.type | default "LoadBalancer" }}
+  {{- if .Values.ingress.ipfsSwarm.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.ingress.ipfsSwarm.service.loadBalancerIP | quote }}
+  {{- end }}
+  {{- if .Values.ingress.ipfsSwarm.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.ingress.ipfsSwarm.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  selector:
+    app: stargate
+  ports:
+    - name: swarm
+      port: {{ .Values.ingress.ipfsSwarm.port }}
+      targetPort: {{ .Values.stargate.ipfs.swarmPort }}
+      protocol: TCP
+{{- if and .Values.ingress.ipfsSwarm.enabled .Values.stargate.ipfs.enabled .Values.ingress.ipfsSwarm.tcpConfigMap.create }}
+---
+{{- end }}
+{{- end }}
+
+{{- if and .Values.ingress.ipfsSwarm.enabled .Values.stargate.ipfs.enabled .Values.ingress.ipfsSwarm.tcpConfigMap.create }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

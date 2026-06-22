@@ -165,8 +165,22 @@ ingress:
   ipfsSwarm:
     enabled: true
     port: 4001
+    # Dedicated Service for the IPFS swarm port (recommended).
+    # This creates a separate Service (LoadBalancer/NodePort) that directly
+    # exposes the stargate TCP swarm port without relying on ingress-nginx hacks.
+    service:
+      enabled: true
+      name: stargate-swarm
+      type: LoadBalancer
+      annotations: {}
+      loadBalancerIP: ""
+      externalTrafficPolicy: ""
+    # Legacy/advanced: write an entry into ingress-nginx's tcp-services ConfigMap.
+    # This only works if your ingress-nginx controller was installed with TCP
+    # port support AND its Service has port 4001 exposed. Usually better to use
+    # the dedicated service above instead.
     tcpConfigMap:
-      create: true
+      create: false
       name: tcp-services
       namespace: ingress-nginx
 
