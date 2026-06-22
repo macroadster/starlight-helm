@@ -19,8 +19,10 @@ spec:
           env:
             - name: STARGATE_STORAGE
               value: {{ .Values.stargate.storage | quote }}
+            {{- if and .Values.postgres.enabled .Values.stargate.pgDsn }}
             - name: STARGATE_PG_DSN
               value: {{ .Values.stargate.pgDsn | quote }}
+            {{- end }}
             - name: STARGATE_PROXY_BASE
               value: {{ .Values.stargate.proxyBase | quote }}
             - name: BITCOIN_NETWORK
@@ -117,6 +119,12 @@ spec:
               value: {{ .Values.stargate.ingestSyncInterval | quote }}
             - name: IPFS_ENABLED
               value: {{ .Values.stargate.ipfs.enabled | quote }}
+            {{- if .Values.stargate.ipfs.enabled }}
+            - name: IPFS_EMBEDDED_ENABLED
+              value: {{ .Values.stargate.ipfs.embeddedEnabled | quote }}
+            - name: IPFS_EMBEDDED_LISTEN
+              value: {{ printf "/ip4/0.0.0.0/tcp/%d" (int .Values.stargate.ipfs.swarmPort) | quote }}
+            {{- end }}
             - name: STARLIGHT_DONATION_ADDRESS
               value: {{ .Values.stargate.donationAddress | quote }}
             {{- if .Values.ca.crt }}
@@ -133,6 +141,11 @@ spec:
             {{- end }}
           ports:
             - containerPort: {{ .Values.stargate.port }}
+            {{- if .Values.stargate.ipfs.enabled }}
+            - name: ipfs-swarm
+              containerPort: {{ .Values.stargate.ipfs.swarmPort }}
+              protocol: TCP
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /api/health
@@ -179,6 +192,12 @@ spec:
     - name: http
       port: 3001
       targetPort: {{ .Values.stargate.port }}
+    {{- if .Values.stargate.ipfs.enabled }}
+    - name: ipfs-swarm
+      port: {{ .Values.stargate.ipfs.swarmPort }}
+      targetPort: {{ .Values.stargate.ipfs.swarmPort }}
+      protocol: TCP
+    {{- end }}
 
 ---
 apiVersion: v1

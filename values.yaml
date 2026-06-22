@@ -17,6 +17,7 @@ image:
     pullPolicy: IfNotPresent
 
 postgres:
+  enabled: true
   user: stargate
   password: stargate
   database: stargate
@@ -37,6 +38,8 @@ stargate:
   donationAddress: ""
   ipfs:
     enabled: true
+    embeddedEnabled: true
+    swarmPort: 4001
     mirrorEnabled: false
     mirrorUploadEnabled: true
     mirrorDownloadEnabled: true
@@ -159,6 +162,13 @@ ingress:
       hosts:
         - starlight.local
         - stargate.local
+  ipfsSwarm:
+    enabled: true
+    port: 4001
+    tcpConfigMap:
+      create: true
+      name: tcp-services
+      namespace: ingress-nginx
 
 # Custom CA certificate.
 # Provide the base64-encoded CA certificate content here.

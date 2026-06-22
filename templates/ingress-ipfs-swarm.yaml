@@ -1,0 +1,14 @@
+{{- if and .Values.ingress.enabled .Values.stargate.ipfs.enabled .Values.ingress.ipfsSwarm.enabled .Values.ingress.ipfsSwarm.tcpConfigMap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.ingress.ipfsSwarm.tcpConfigMap.name }}
+  namespace: {{ .Values.ingress.ipfsSwarm.tcpConfigMap.namespace }}
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  "{{ .Values.ingress.ipfsSwarm.port }}": "{{ .Release.Namespace }}/stargate:{{ .Values.stargate.ipfs.swarmPort }}"
+{{- end }}
