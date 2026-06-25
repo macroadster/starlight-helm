@@ -106,6 +106,8 @@ spec:
               value: {{ .Values.stargate.claimTtlHours | quote }}
             - name: STARGATE_SEED_FIXTURES
               value: {{ .Values.stargate.seedFixtures | quote }}
+            - name: STARGATE_AGENT_ENABLED
+              value: {{ .Values.stargate.agentEnabled | quote }}
             - name: STARGATE_ENABLE_INGEST_SYNC
               value: {{ .Values.stargate.enableIngestSync | quote }}
             - name: STARGATE_ENABLE_FUNDING_SYNC

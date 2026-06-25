@@ -67,6 +67,7 @@ stargate:
     scanTimeoutSec: 30
   claimTtlHours: 72
   seedFixtures: false
+  agentEnabled: true
   enableIngestSync: true  # Enable ingestion sync
   enableFundingSync: true
   fundingProvider: "blockstream"
