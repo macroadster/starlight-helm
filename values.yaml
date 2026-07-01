@@ -17,7 +17,8 @@ image:
     pullPolicy: IfNotPresent
 
 postgres:
-  enabled: true
+  # Optional shared DB. Disabled by default — Stargate uses SQLite on the data PVC.
+  enabled: false
   user: stargate
   password: stargate
   database: stargate
@@ -25,8 +26,13 @@ postgres:
   storage: 1Gi
 
 stargate:
-  storage: postgres
+  # sqlite (default) | postgres | memory | filesystem
+  # SQLite files live under STARGATE_DATA_DIR/sqlite on the blocks PVC (/data/sqlite).
+  storage: sqlite
+  # Only used when postgres.enabled=true and storage=postgres
   pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable"
+  # Root data dir in-container (PVC mount). SQLite DBs: {dataDir}/sqlite/*.db
+  dataDir: /data
   port: 3001
   proxyBase: "http://starlight-api:8080"
   blocksStorage: 1Gi

@@ -2,7 +2,7 @@
 
 A complete Bitcoin-native smart contract system that keeps the blockchain safe while enabling useful work. This stack combines AI-powered security that detects hidden data in blockchain images with a full workflow system for proposals, funding, and verified work—all built on Bitcoin with smart contracts, escrow, and dispute resolution.
 
-Minimal chart to run Starlight API, Stargate, and Postgres.
+Minimal chart to run Starlight API and Stargate (SQLite by default; optional Postgres).
 
 ## Quick Start
 
@@ -45,11 +45,14 @@ curl http://localhost:8080/health
 ## Values
 - `image.stargate.repository` / `tag`: Stargate image (default `macroadster/stargate:v1`)
 - `image.starlight.repository` / `tag`: Starlight API image (default `starlight-api:latest`)
-- `image.postgres.repository` / `tag`: Postgres (default `postgres:15`)
-- `postgres.*`: credentials/PVC size
-- Storage: one PVC (`stargate-blocks-pvc`) shared at `/data` by Stargate and Starlight for both blocks and uploads. Size controlled by `stargate.blocksStorage`, and `stargate.storageClass` can set a specific class.
-- `stargate.storage`: `postgres` or `filesystem` (default `postgres`)
-- `stargate.pgDsn`: DSN pointing to the Postgres service (`postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable`)
+- `image.postgres.repository` / `tag`: Postgres (default `postgres:15`, only if `postgres.enabled`)
+- `postgres.enabled`: deploy in-cluster Postgres (default `false`; use SQLite on the data PVC)
+- `postgres.*`: credentials/PVC size when enabled
+- Storage: one PVC (`stargate-blocks-pvc`) mounted at `stargate.dataDir` (default `/data`) for blocks, uploads, and SQLite DBs under `/data/sqlite/`. Size controlled by `stargate.blocksStorage`, and `stargate.storageClass` can set a specific class.
+- `stargate.storage`: `sqlite` (default), `postgres`, `memory`, or `filesystem`
+- `stargate.dataDir`: in-container data root (default `/data`); SQLite files at `{dataDir}/sqlite/{mcp,api_keys,ingestions,blocks}.db`
+- `stargate.pgDsn`: DSN for Postgres mode (`postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable`)
+- **Postgres → SQLite migration**: build `backend/cmd/migrate-pg-to-sqlite` in stargate, run against the live PG DSN with `--target-dir /data/sqlite` (on the PVC), verify, then set `stargate.storage=sqlite` and `postgres.enabled=false` and upgrade.
 - `stargate.bitcoinNetwork`: Bitcoin network to use (`mainnet` or `testnet`, default `mainnet`)
 - `stargate.ipfs.*`: IPFS uploads mirroring configuration (see values for defaults)
   - `stargate.ipfs.mirrorEnabled`: enable IPFS mirror (default `false`)

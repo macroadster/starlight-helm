@@ -7,6 +7,9 @@ spec:
     matchLabels:
       app: stargate
   replicas: 1
+  # Recreate avoids RWO PVC multi-attach and memory surge on single-node clusters
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -19,7 +22,9 @@ spec:
           env:
             - name: STARGATE_STORAGE
               value: {{ .Values.stargate.storage | quote }}
-            {{- if and .Values.postgres.enabled .Values.stargate.pgDsn }}
+            - name: STARGATE_DATA_DIR
+              value: {{ .Values.stargate.dataDir | default "/data" | quote }}
+            {{- if and (eq .Values.stargate.storage "postgres") .Values.postgres.enabled .Values.stargate.pgDsn }}
             - name: STARGATE_PG_DSN
               value: {{ .Values.stargate.pgDsn | quote }}
             {{- end }}
@@ -28,7 +33,7 @@ spec:
             - name: BITCOIN_NETWORK
               value: {{ .Values.stargate.bitcoinNetwork | quote }}
             - name: BLOCKS_DIR
-              value: /data/blocks
+              value: {{ printf "%s/blocks" (.Values.stargate.dataDir | default "/data") | quote }}
             - name: STARGATE_REQUIRE_IMAGE
               value: {{ .Values.stargate.requireImage | quote }}
             - name: STARGATE_INGEST_TOKEN
@@ -52,7 +57,7 @@ spec:
               value: {{ .Values.stargate.apiKey | quote }}
               {{- end }}
             - name: UPLOADS_DIR
-              value: /data/uploads
+              value: {{ printf "%s/uploads" (.Values.stargate.dataDir | default "/data") | quote }}
             - name: IPFS_MIRROR_ENABLED
               value: {{ .Values.stargate.ipfs.mirrorEnabled | quote }}
             - name: IPFS_MIRROR_UPLOAD_ENABLED
