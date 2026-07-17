@@ -121,6 +121,8 @@ spec:
               value: {{ .Values.stargate.fundingProvider | quote }}
             - name: STARGATE_FUNDING_API_BASE
               value: {{ .Values.stargate.fundingApiBase | quote }}
+            - name: STARGATE_SYNC_ENABLED
+              value: {{ .Values.stargate.syncEnabled | default "true" | quote }}
 
             - name: STARGATE_INGEST_SYNC_INTERVAL
               value: {{ .Values.stargate.ingestSyncInterval | quote }}
@@ -131,6 +133,19 @@ spec:
               value: {{ .Values.stargate.ipfs.embeddedEnabled | quote }}
             - name: IPFS_EMBEDDED_LISTEN
               value: {{ printf "/ip4/0.0.0.0/tcp/%d" (int .Values.stargate.ipfs.swarmPort) | quote }}
+            {{- /* Private mesh by default. Set bootstrap to multiaddrs or "public" (CPU-heavy). */}}
+            - name: IPFS_EMBEDDED_BOOTSTRAP
+              value: {{ .Values.stargate.ipfs.embeddedBootstrap | default "" | quote }}
+            - name: IPFS_JOIN_PUBLIC_IPFS
+              value: {{ .Values.stargate.ipfs.joinPublicIpfs | default false | quote }}
+            - name: IPFS_DHT_MODE
+              value: {{ .Values.stargate.ipfs.dhtMode | default "client" | quote }}
+            - name: IPFS_PUBSUB_PEER_EXCHANGE
+              value: {{ .Values.stargate.ipfs.pubsubPeerExchange | default false | quote }}
+            - name: IPFS_LIBP2P_LOW_WATER
+              value: {{ .Values.stargate.ipfs.libp2pLowWater | default 10 | quote }}
+            - name: IPFS_LIBP2P_HIGH_WATER
+              value: {{ .Values.stargate.ipfs.libp2pHighWater | default 40 | quote }}
             {{- end }}
             - name: STARLIGHT_DONATION_ADDRESS
               value: {{ .Values.stargate.donationAddress | quote }}

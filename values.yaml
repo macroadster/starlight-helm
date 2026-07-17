@@ -46,6 +46,15 @@ stargate:
     enabled: true
     embeddedEnabled: true
     swarmPort: 4001
+    # Private mesh by default. Leave empty for mDNS-only peer discovery.
+    # Comma-separated multiaddrs for known stargate peers, or "public" to join
+    # the public IPFS DHT (burns multi-core CPU — avoid in production).
+    embeddedBootstrap: ""
+    joinPublicIpfs: false
+    dhtMode: "client"            # client | server | auto
+    pubsubPeerExchange: false    # aggressive mesh growth; keep off
+    libp2pLowWater: 10
+    libp2pHighWater: 40
     mirrorEnabled: false
     mirrorUploadEnabled: true
     mirrorDownloadEnabled: true
@@ -76,6 +85,7 @@ stargate:
   agentEnabled: true
   enableIngestSync: true  # Enable ingestion sync
   enableFundingSync: true
+  syncEnabled: true       # Generic MCP state sync over IPFS pubsub. Only stargate-uploads mirror is the official path. This is disabled in production-like setups to avoid resource use on unproven secondary mechanisms.
   fundingProvider: "blockstream"
   fundingApiBase: ""
   ingestSyncInterval: "30s"
