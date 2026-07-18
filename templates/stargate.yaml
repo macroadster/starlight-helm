@@ -30,8 +30,6 @@ spec:
             {{- end }}
             - name: STARGATE_PROXY_BASE
               value: {{ .Values.stargate.proxyBase | quote }}
-            - name: STARGATE_DATA_DIR
-              value: /data
             {{- if .Values.stargate.starlightGguf }}
             - name: STARLIGHT_GGUF
               value: {{ .Values.stargate.starlightGguf | quote }}
