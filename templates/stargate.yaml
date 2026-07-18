@@ -30,6 +30,18 @@ spec:
             {{- end }}
             - name: STARGATE_PROXY_BASE
               value: {{ .Values.stargate.proxyBase | quote }}
+            - name: STARGATE_DATA_DIR
+              value: /data
+            {{- if .Values.stargate.starlightGguf }}
+            - name: STARLIGHT_GGUF
+              value: {{ .Values.stargate.starlightGguf | quote }}
+            {{- end }}
+            - name: STARLIGHT_HF_REPO
+              value: {{ .Values.stargate.starlightHfRepo | quote }}
+            - name: STARLIGHT_HF_FILE
+              value: {{ .Values.stargate.starlightHfFile | quote }}
+            - name: STARLIGHT_HF_REVISION
+              value: {{ .Values.stargate.starlightHfRevision | quote }}
             - name: BITCOIN_NETWORK
               value: {{ .Values.stargate.bitcoinNetwork | quote }}
             - name: BLOCKS_DIR

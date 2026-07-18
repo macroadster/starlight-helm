@@ -3,10 +3,6 @@ image:
     repository: macroadster/stargate
     tag: v1
     pullPolicy: IfNotPresent
-  starlight:
-    repository: macroadster/starlight-api
-    tag: v1
-    pullPolicy: IfNotPresent
   ipfs:
     repository: ipfs/kubo
     tag: "v0.27.0"
@@ -34,7 +30,7 @@ stargate:
   # Root data dir in-container (PVC mount). SQLite DBs: {dataDir}/sqlite/*.db
   dataDir: /data
   port: 3001
-  proxyBase: "http://starlight-api:8080"
+  proxyBase: ""
   blocksStorage: 1Gi
   storageClass: ""
   ingestToken: ""
@@ -42,6 +38,11 @@ stargate:
   bitcoinNetwork: "mainnet"
   requireImage: true
   donationAddress: ""
+  # starlight detector (native Trin/GGUF in stargate; no starlight-api pod)
+  starlightGguf: ""           # optional local path override; empty = data dir + HF
+  starlightHfRepo: "macroadster/starlight-prod"
+  starlightHfFile: "starlight.gguf"
+  starlightHfRevision: "main"
   ipfs:
     enabled: true
     embeddedEnabled: true
@@ -101,19 +102,6 @@ ipfs:
   storage: 5Gi
   storageClass: ""
 
-starlight:
-  port: 8080
-  watcherEnabled: true
-  workerEnabled: true
-  ingestUrl: "http://stargate:3001/api/ingest-inscription"
-  ingestToken: ""
-  apiKey: "demo-api-key"
-  allowAnonymousScan: false
-  stegoCallbackUrl: "http://stargate:3001/api/stego/callback"
-  stegoCallbackSecret: ""
-
-
-
 resources:
   stargate:
     requests:
@@ -122,13 +110,6 @@ resources:
     limits:
       cpu: 700m
       memory: 768Mi
-  starlight:
-    requests:
-      cpu: 500m
-      memory: 1Gi
-    limits:
-      cpu: 1
-      memory: 3Gi
   ipfs:
     requests:
       cpu: 100m
@@ -149,17 +130,9 @@ secrets:
   name: stargate-stack-secrets
   stargateApiKey: ""
   stargateIngestToken: ""
-  starlightApiKey: ""
-  starlightIngestToken: ""
-  starlightStegoCallbackSecret: ""
 
 hpa:
   stargate:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 70
-  starlight:
     enabled: false
     minReplicas: 1
     maxReplicas: 3

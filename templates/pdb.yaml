@@ -8,14 +8,4 @@ spec:
   selector:
     matchLabels:
       app: stargate
----
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: starlight-api-pdb
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: starlight-api
 {{- end }}
