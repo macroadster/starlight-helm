@@ -1,5 +1,6 @@
 values-local-docker.yaml
 values-test-docker.yaml
+values-local.yaml
 starlight.local+1.pem
 starlight.local+1-key.pem
 starlight.test+1.pem

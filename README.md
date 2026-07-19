@@ -51,7 +51,7 @@ curl http://localhost:3001/api/health
   - `stargate.btcd.txIndex` / `addrIndex`: default `true` (required for historical txs / address UTXOs)
   - `stargate.btcd.allowMainnet`: default `false` (mainnet needs large disk + explicit opt-in)
   - `stargate.probes.startup.failureThreshold`: default `60` (~10m) so managed btcd RPC wait does not trip restarts
-- Local installs: prefer `-f values-local.yaml` (alias of `values-local-docker.yaml`; 20Gi PVC, testnet4, managed btcd)
+- Local installs: `-f values-local-docker.yaml` (gitignored; 20Gi PVC, testnet4, managed btcd). Test profile: `-f values-test-docker.yaml`.
 - Stego detection (native Path A — Trin/GGUF in-process):
   - `stargate.starlightGguf`: optional local GGUF path override; empty uses data dir + Hugging Face
   - `stargate.starlightHfRepo`: HF repo (default `macroadster/starlight-prod`)
