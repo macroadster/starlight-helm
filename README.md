@@ -35,13 +35,23 @@ curl http://localhost:3001/api/health
 - `image.postgres.repository` / `tag`: Postgres (default `postgres:15`, only if `postgres.enabled`)
 - `postgres.enabled`: deploy in-cluster Postgres (default `false`; use SQLite on the data PVC)
 - `postgres.*`: credentials/PVC size when enabled
-- Storage: one PVC (`stargate-blocks-pvc`) mounted at `stargate.dataDir` (default `/data`) for blocks, uploads, model cache, and SQLite DBs under `/data/sqlite/`. Size controlled by `stargate.blocksStorage`; `stargate.storageClass` can set a class.
+- Storage: one PVC (`stargate-blocks-pvc`) mounted at `stargate.dataDir` (default `/data`) for blocks, uploads, model cache, SQLite DBs under `/data/sqlite/`, **and btcd chainstate under `/data/btcd`**. Size controlled by `stargate.blocksStorage` (default **50Gi** for testnet4 full node + indexes); `stargate.storageClass` can set a class. Expanding an existing 1Gi claim requires StorageClass volume expansion or a new PVC.
 - `stargate.storage`: `sqlite` (default), `postgres`, `memory`, or `filesystem`
 - `stargate.dataDir`: in-container data root (default `/data`); SQLite files at `{dataDir}/sqlite/{mcp,api_keys,ingestions,blocks}.db`
 - `stargate.pgDsn`: DSN for Postgres mode (`postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable`)
 - **Postgres → SQLite migration**: build `backend/cmd/migrate-pg-to-sqlite` in stargate, run against the live PG DSN with `--target-dir /data/sqlite` (on the PVC), verify, then set `stargate.storage=sqlite` and `postgres.enabled=false` and upgrade.
 - `stargate.proxyBase`: optional external proxy base (default empty; kept for operator override via `STARGATE_PROXY_BASE`)
-- `stargate.bitcoinNetwork`: Bitcoin network (`mainnet` or `testnet`, default `mainnet`)
+- `stargate.bitcoinNetwork`: Bitcoin network (`testnet4` default; also `testnet`, `signet`, `mainnet`)
+- **btcd full node (no mining)** — Stargate manages `btcd` in the same container (see stargate ADR 0006):
+  - `stargate.btcd.mode`: `managed` (default) | `external` | `off`
+  - `stargate.btcd.bin`: path to btcd binary (image ships `/usr/local/bin/btcd`)
+  - `stargate.btcd.dataDir`: empty → `{dataDir}/btcd` on the data PVC (**must persist**)
+  - `stargate.btcd.rpcHost` / `rpcUser` / `rpcPass`: empty uses network defaults + auto auth file
+  - `stargate.btcd.p2pPort` / `p2pListen`: testnet4 default `48333`; set `p2pServiceEnabled: true` to expose on the Service
+  - `stargate.btcd.txIndex` / `addrIndex`: default `true` (required for historical txs / address UTXOs)
+  - `stargate.btcd.allowMainnet`: default `false` (mainnet needs large disk + explicit opt-in)
+  - `stargate.probes.startup.failureThreshold`: default `60` (~10m) so managed btcd RPC wait does not trip restarts
+- Local installs: prefer `-f values-local.yaml` (alias of `values-local-docker.yaml`; 20Gi PVC, testnet4, managed btcd)
 - Stego detection (native Path A — Trin/GGUF in-process):
   - `stargate.starlightGguf`: optional local GGUF path override; empty uses data dir + Hugging Face
   - `stargate.starlightHfRepo`: HF repo (default `macroadster/starlight-prod`)

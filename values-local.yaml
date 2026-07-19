@@ -1,0 +1,201 @@
+# values-local.yaml
+# Local Docker Desktop / kind / minikube overrides for the Starlight Helm stack.
+#
+#   helm upgrade --install starlight-stack . -f values-local.yaml
+#
+# TLS certs/keys stay out of git — use values-local-docker.yaml (gitignored) or
+# provide ingress.tlsCrt / ingress.tlsKey / ca.crt via your own secret files.
+# values-local-docker.yaml is the full local overlay including TLS material.
+
+image:
+  stargate:
+    repository: stargate
+    tag: latest
+    pullPolicy: IfNotPresent
+  ipfs:
+    repository: ipfs/kubo
+    tag: "v0.27.0"
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+
+postgres:
+  enabled: false
+  user: stargate
+  password: stargate
+  database: stargate
+  port: 5432
+  storage: 1Gi
+
+stargate:
+  storage: sqlite
+  dataDir: /data
+  port: 3001
+  proxyBase: ""
+  # App data + btcd testnet4 chainstate (indexes). Expand PVC if you previously used 1Gi.
+  blocksStorage: 20Gi
+  storageClass: ""
+  ingestToken: ""
+  apiKey: "demo-api-key"
+  bitcoinNetwork: "testnet4"
+  requireImage: true
+  donationAddress: "tb1qqyf4y2zeqepmr3fd8gzsal5vhv7tfqjye0lghk"
+  # Managed btcd in the same container; chainstate under /data/btcd on the data PVC
+  btcd:
+    mode: managed
+    bin: /usr/local/bin/btcd
+    dataDir: ""              # => /data/btcd
+    rpcHost: ""              # => 127.0.0.1:48334 for testnet4
+    p2pListen: "0.0.0.0:48333"
+    p2pPort: 48333
+    p2pServiceEnabled: false
+    txIndex: true
+    addrIndex: true
+    allowMainnet: false
+    extraArgs: ""
+  probes:
+    startup:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 60
+      timeoutSeconds: 5
+    readiness:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    liveness:
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 5
+  starlightGguf: ""
+  starlightHfRepo: "macroadster/starlight-prod"
+  starlightHfFile: "starlight.gguf"
+  starlightHfRevision: "main"
+  ipfs:
+    enabled: true
+    embeddedEnabled: true
+    swarmPort: 4001
+    embeddedBootstrap: ""
+    joinPublicIpfs: false
+    dhtMode: "client"
+    pubsubPeerExchange: false
+    libp2pLowWater: 10
+    libp2pHighWater: 40
+    mirrorEnabled: true
+    mirrorUploadEnabled: true
+    mirrorDownloadEnabled: true
+    apiUrl: "http://stargate-ipfs:5001"
+    mirrorTopic: "stargate-uploads"
+    mirrorPollIntervalSec: 10
+    mirrorPublishIntervalSec: 30
+    mirrorMaxFiles: 2000
+    httpTimeoutSec: 30
+    ingestSyncEnabled: true
+    ingestSyncIntervalSec: 60
+    ingestSyncManifest: "stargate-uploads-manifest.json"
+    ingestSyncMaxEntries: 5000
+    stegoTopic: "stargate-stego"
+    stegoAnnounceEnabled: true
+    stegoSyncEnabled: true
+    stegoSyncIntervalSec: 10
+  stego:
+    approvalEnabled: true
+    method: "lsb"
+    issuer: ""
+    ingestTimeoutSec: 30
+    ingestPollSec: 2
+    inscribeTimeoutSec: 60
+    scanTimeoutSec: 30
+  claimTtlHours: 72
+  seedFixtures: false
+  agentEnabled: true
+  enableIngestSync: true
+  enableFundingSync: true
+  fundingProvider: "blockstream"
+  fundingApiBase: ""
+  ingestSyncInterval: "30s"
+  syncEnabled: true
+
+ipfs:
+  enabled: false
+  enablePubsub: true
+  routing: dhtclient
+  profile: lowpower
+  apiPort: 5001
+  gatewayPort: 8080
+  swarmPort: 4001
+  storage: 2Gi
+  storageClass: ""
+
+resources:
+  stargate:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  ipfs:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  postgres:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+secrets:
+  createDefault: true
+  name: stargate-stack-secrets
+  stargateApiKey: "demo-api-key"
+  stargateIngestToken: ""
+
+hpa:
+  stargate:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+  frontendHost: starlight.local
+  backendHost: stargate.local
+  tls:
+    - secretName: stargate-stack-tls
+      hosts:
+        - starlight.local
+        - stargate.local
+  ipfsSwarm:
+    enabled: true
+    port: 4001
+    service:
+      enabled: true
+      name: stargate-swarm
+      type: LoadBalancer
+      annotations: {}
+      loadBalancerIP: ""
+      externalTrafficPolicy: ""
+    tcpConfigMap:
+      create: false
+      name: tcp-services
+      namespace: ingress-nginx
+
+# Provide CA / TLS material out-of-band (not committed).
+ca:
+  crt: ""

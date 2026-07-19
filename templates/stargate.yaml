@@ -42,6 +42,43 @@ spec:
               value: {{ .Values.stargate.starlightHfRevision | quote }}
             - name: BITCOIN_NETWORK
               value: {{ .Values.stargate.bitcoinNetwork | quote }}
+            {{- $btcd := .Values.stargate.btcd | default dict }}
+            - name: BTCD_MODE
+              value: {{ $btcd.mode | default "managed" | quote }}
+            - name: BTCD_BIN
+              value: {{ $btcd.bin | default "/usr/local/bin/btcd" | quote }}
+            - name: BTCD_DATADIR
+              {{- if $btcd.dataDir }}
+              value: {{ $btcd.dataDir | quote }}
+              {{- else }}
+              value: {{ printf "%s/btcd" (.Values.stargate.dataDir | default "/data") | quote }}
+              {{- end }}
+            {{- if $btcd.rpcHost }}
+            - name: BTCD_RPC_HOST
+              value: {{ $btcd.rpcHost | quote }}
+            {{- end }}
+            {{- if $btcd.rpcUser }}
+            - name: BTCD_RPC_USER
+              value: {{ $btcd.rpcUser | quote }}
+            {{- end }}
+            {{- if $btcd.rpcPass }}
+            - name: BTCD_RPC_PASS
+              value: {{ $btcd.rpcPass | quote }}
+            {{- end }}
+            {{- if $btcd.p2pListen }}
+            - name: BTCD_P2P_LISTEN
+              value: {{ $btcd.p2pListen | quote }}
+            {{- end }}
+            - name: BTCD_TXINDEX
+              value: {{ ($btcd.txIndex | default true) | quote }}
+            - name: BTCD_ADDRINDEX
+              value: {{ ($btcd.addrIndex | default true) | quote }}
+            - name: BTCD_ALLOW_MAINNET
+              value: {{ ($btcd.allowMainnet | default false) | quote }}
+            {{- if $btcd.extraArgs }}
+            - name: BTCD_EXTRA_ARGS
+              value: {{ $btcd.extraArgs | quote }}
+            {{- end }}
             - name: BLOCKS_DIR
               value: {{ printf "%s/blocks" (.Values.stargate.dataDir | default "/data") | quote }}
             - name: STARGATE_REQUIRE_IMAGE
@@ -172,31 +209,48 @@ spec:
               subPath: ca.crt
             {{- end }}
           ports:
-            - containerPort: {{ .Values.stargate.port }}
+            - name: http
+              containerPort: {{ .Values.stargate.port }}
             {{- if .Values.stargate.ipfs.enabled }}
             - name: ipfs-swarm
               containerPort: {{ .Values.stargate.ipfs.swarmPort }}
               protocol: TCP
             {{- end }}
+            {{- $btcdPort := (.Values.stargate.btcd).p2pPort | default 0 }}
+            {{- if and (.Values.stargate.btcd) (gt (int $btcdPort) 0) }}
+            - name: btcd-p2p
+              containerPort: {{ int $btcdPort }}
+              protocol: TCP
+            {{- end }}
+          {{- $probes := .Values.stargate.probes | default dict }}
+          {{- $startup := $probes.startup | default dict }}
+          {{- $ready := $probes.readiness | default dict }}
+          {{- $live := $probes.liveness | default dict }}
           readinessProbe:
             httpGet:
               path: /api/health
               port: {{ .Values.stargate.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: {{ $ready.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ $ready.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $ready.timeoutSeconds | default 3 }}
+            failureThreshold: {{ $ready.failureThreshold | default 3 }}
           livenessProbe:
             httpGet:
               path: /api/health
               port: {{ .Values.stargate.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 20
+            initialDelaySeconds: {{ $live.initialDelaySeconds | default 60 }}
+            periodSeconds: {{ $live.periodSeconds | default 30 }}
+            timeoutSeconds: {{ $live.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $live.failureThreshold | default 5 }}
           startupProbe:
             httpGet:
               path: /api/health
               port: {{ .Values.stargate.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 30
+            # Covers managed btcd RPC wait (~2m) + app bootstrap; IBD continues after ready.
+            initialDelaySeconds: {{ $startup.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ $startup.periodSeconds | default 10 }}
+            timeoutSeconds: {{ $startup.timeoutSeconds | default 5 }}
+            failureThreshold: {{ $startup.failureThreshold | default 60 }}
           resources:
 {{ toYaml .Values.resources.stargate | default "{}" | nindent 12 }}
       volumes:
@@ -228,6 +282,14 @@ spec:
     - name: ipfs-swarm
       port: {{ .Values.stargate.ipfs.swarmPort }}
       targetPort: {{ .Values.stargate.ipfs.swarmPort }}
+      protocol: TCP
+    {{- end }}
+    {{- $btcdSvc := .Values.stargate.btcd | default dict }}
+    {{- $btcdP2P := $btcdSvc.p2pPort | default 0 }}
+    {{- if and ($btcdSvc.p2pServiceEnabled | default false) (gt (int $btcdP2P) 0) }}
+    - name: btcd-p2p
+      port: {{ int $btcdP2P }}
+      targetPort: {{ int $btcdP2P }}
       protocol: TCP
     {{- end }}
 

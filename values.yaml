@@ -28,16 +28,58 @@ stargate:
   # Only used when postgres.enabled=true and storage=postgres
   pgDsn: "postgres://stargate:stargate@stargate-postgres:5432/stargate?sslmode=disable"
   # Root data dir in-container (PVC mount). SQLite DBs: {dataDir}/sqlite/*.db
+  # Also holds btcd chainstate at {dataDir}/btcd when btcd.mode=managed.
   dataDir: /data
   port: 3001
   proxyBase: ""
-  blocksStorage: 1Gi
+  # PVC size for app data + btcd full-node chainstate (testnet4+indexes is multi-GB).
+  # Existing PVCs are not resized automatically — expand the claim / storage class if needed.
+  blocksStorage: 50Gi
   storageClass: ""
   ingestToken: ""
   apiKey: "demo-api-key"
-  bitcoinNetwork: "mainnet"
+  # Matches stargate BITCOIN_NETWORK default (testnet4). Mainnet requires btcd.allowMainnet=true.
+  bitcoinNetwork: "testnet4"
   requireImage: true
   donationAddress: ""
+  # Embedded / external btcd full node (no mining). See ADR 0006 in stargate repo.
+  btcd:
+    # managed = spawn btcd in-process container; external = BTCD_RPC_HOST only; off = Esplora fallback
+    mode: managed
+    bin: /usr/local/bin/btcd
+    # Empty => {dataDir}/btcd on the data PVC (persists across restarts)
+    dataDir: ""
+    # Empty => network default (e.g. 127.0.0.1:48334 for testnet4)
+    rpcHost: ""
+    rpcUser: ""
+    rpcPass: ""
+    # P2P listen inside the container (outbound works without Service exposure)
+    p2pListen: "0.0.0.0:48333"
+    # Container/Service port for inbound P2P; set 0 to omit the port
+    p2pPort: 48333
+    # Expose P2P on the stargate Service (optional; peers can still dial out)
+    p2pServiceEnabled: false
+    txIndex: true
+    addrIndex: true
+    allowMainnet: false
+    extraArgs: ""
+  # Probes: startup must cover managed btcd RPC wait (up to ~2m) + app init.
+  probes:
+    startup:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      failureThreshold: 60
+      timeoutSeconds: 5
+    readiness:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+    liveness:
+      initialDelaySeconds: 60
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 5
   # starlight detector (native Trin/GGUF in stargate; no starlight-api pod)
   starlightGguf: ""           # optional local path override; empty = data dir + HF
   starlightHfRepo: "macroadster/starlight-prod"
@@ -104,12 +146,13 @@ ipfs:
 
 resources:
   stargate:
+    # btcd full node + indexes needs more headroom than the old explorer-poll path
     requests:
-      cpu: 150m
-      memory: 384Mi
+      cpu: 250m
+      memory: 1Gi
     limits:
-      cpu: 700m
-      memory: 768Mi
+      cpu: "2"
+      memory: 4Gi
   ipfs:
     requests:
       cpu: 100m
