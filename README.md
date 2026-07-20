@@ -47,7 +47,8 @@ curl http://localhost:3001/api/health
   - `stargate.btcd.bin`: path to btcd binary (image ships `/usr/local/bin/btcd`)
   - `stargate.btcd.dataDir`: empty → `{dataDir}/btcd` on the data PVC (**must persist**)
   - `stargate.btcd.rpcHost` / `rpcUser` / `rpcPass`: empty uses network defaults + auto auth file
-  - `stargate.btcd.p2pPort` / `p2pListen`: testnet4 default `48333`; set `p2pServiceEnabled: true` to expose on the Service
+  - `stargate.btcd.p2pPort` / `p2pListen`: testnet4 default `48333`; set `p2pServiceEnabled: true` to expose on the ClusterIP Service
+  - `ingress.btcdP2p.*`: optional LoadBalancer/NodePort (`stargate-btcd-p2p`) for **inbound** peers (mirrors `ingress.ipfsSwarm`); set `enabled: true` and ensure `p2pPort` > 0
   - `stargate.btcd.txIndex` / `addrIndex`: default `true` (required for historical txs / address UTXOs)
   - `stargate.btcd.allowMainnet`: default `false` (mainnet needs large disk + explicit opt-in)
   - `stargate.probes.startup.failureThreshold`: default `60` (~10m) so managed btcd RPC wait does not trip restarts

@@ -1,0 +1,58 @@
+{{- $btcd := .Values.stargate.btcd | default dict }}
+{{- $btcdP2P := $btcd.p2pPort | default 0 }}
+{{- $cfg := .Values.ingress.btcdP2p | default dict }}
+{{- $svc := $cfg.service | default dict }}
+{{- $tcp := $cfg.tcpConfigMap | default dict }}
+{{- if and ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($svc.enabled | default false) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name | default "stargate-btcd-p2p" }}
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: btcd-p2p
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  {{- with $svc.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ $svc.type | default "LoadBalancer" }}
+  {{- if $svc.loadBalancerIP }}
+  loadBalancerIP: {{ $svc.loadBalancerIP | quote }}
+  {{- end }}
+  {{- if $svc.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ $svc.externalTrafficPolicy | quote }}
+  {{- end }}
+  selector:
+    app: stargate
+  ports:
+    - name: btcd-p2p
+      port: {{ $cfg.port | default (int $btcdP2P) }}
+      targetPort: {{ int $btcdP2P }}
+      protocol: TCP
+{{- if and ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
+---
+{{- end }}
+{{- end }}
+
+{{- $btcd := .Values.stargate.btcd | default dict }}
+{{- $btcdP2P := $btcd.p2pPort | default 0 }}
+{{- $cfg := .Values.ingress.btcdP2p | default dict }}
+{{- $tcp := $cfg.tcpConfigMap | default dict }}
+{{- if and ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $tcp.name | default "tcp-services" }}
+  namespace: {{ $tcp.namespace | default "ingress-nginx" }}
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  "{{ $cfg.port | default (int $btcdP2P) }}": "{{ .Release.Namespace }}/stargate:{{ int $btcdP2P }}"
+{{- end }}

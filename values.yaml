@@ -216,6 +216,25 @@ ingress:
       create: false
       name: tcp-services
       namespace: ingress-nginx
+  # Inbound btcd P2P (testnet4 default 48333). Requires stargate.btcd.p2pPort > 0
+  # and a listening process (p2pListen). ClusterIP exposure is separate via
+  # stargate.btcd.p2pServiceEnabled.
+  btcdP2p:
+    enabled: false
+    port: 48333
+    # Dedicated Service (LoadBalancer/NodePort) for inbound peer connections.
+    service:
+      enabled: true
+      name: stargate-btcd-p2p
+      type: LoadBalancer
+      annotations: {}
+      loadBalancerIP: ""
+      externalTrafficPolicy: ""
+    # Legacy: ingress-nginx TCP ConfigMap entry (prefer dedicated service).
+    tcpConfigMap:
+      create: false
+      name: tcp-services
+      namespace: ingress-nginx
 
 # Custom CA certificate.
 # Provide the base64-encoded CA certificate content here.
