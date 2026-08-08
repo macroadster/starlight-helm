@@ -1,2 +1,5 @@
 .beads/
 .beads/*.sock
+deploy/
+values-local.yaml
+*.pem

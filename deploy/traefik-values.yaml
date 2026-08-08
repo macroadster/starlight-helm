@@ -1,0 +1,83 @@
+# Traefik Proxy v3 — replacement for retired kubernetes/ingress-nginx.
+# Chart: traefik/traefik 41.2.0 (app v3.7.10)
+#
+#   helm repo add traefik https://traefik.github.io/charts
+#   helm upgrade --install traefik traefik/traefik \
+#     --namespace traefik --create-namespace \
+#     --version 41.2.0 \
+#     -f deploy/traefik-values.yaml
+#
+# On k3s this expects `--disable=traefik` so the bundled controller is not running.
+# HTTP→HTTPS redirect is done at the entrypoint (no app Ingress annotations needed).
+# Existing cert-manager TLS secrets on Ingress.spec.tls continue to work.
+
+image:
+  tag: v3.7.10
+
+deployment:
+  replicas: 1
+  kind: Deployment
+
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+  name: traefik
+
+ingressRoute:
+  dashboard:
+    enabled: false
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+    publishedService:
+      enabled: true
+  kubernetesGateway:
+    enabled: false
+  # Optional compat: serve leftover Ingress objects that still use class "nginx"
+  # after the community controller is gone. Leave off once starlight-stack uses
+  # provider=traefik.
+  kubernetesIngressNGINX:
+    enabled: false
+
+ports:
+  web:
+    expose:
+      default: true
+    exposedPort: 80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    expose:
+      default: true
+    exposedPort: 443
+    http:
+      tls:
+        enabled: true
+
+service:
+  enabled: true
+  spec:
+    type: LoadBalancer
+    externalTrafficPolicy: Local
+
+log:
+  level: INFO
+
+accessLog:
+  enabled: true
+  format: common
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

@@ -33,7 +33,7 @@ spec:
       port: {{ $cfg.port | default (int $btcdP2P) }}
       targetPort: {{ int $btcdP2P }}
       protocol: TCP
-{{- if and ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
+{{- if and (include "stargate.ingress.useNginxTCP" .) ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
 ---
 {{- end }}
 {{- end }}
@@ -42,7 +42,7 @@ spec:
 {{- $btcdP2P := $btcd.p2pPort | default 0 }}
 {{- $cfg := .Values.ingress.btcdP2p | default dict }}
 {{- $tcp := $cfg.tcpConfigMap | default dict }}
-{{- if and ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
+{{- if and (include "stargate.ingress.useNginxTCP" .) ($cfg.enabled | default false) (gt (int $btcdP2P) 0) ($tcp.create | default false) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

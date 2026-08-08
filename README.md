@@ -98,7 +98,10 @@ curl http://localhost:3001/api/health
 - `stargate.fundingProvider`: funding provider (default `blockstream`)
 - `stargate.fundingApiBase`: funding API base URL
 - `stargate.ingestSyncInterval`: ingest sync interval (default `30s`)
-- `ingress.enabled`: optional Ingress (defaults: frontend `starlight.local`, backend `stargate.local`; set `ingress.className`/`annotations`/`tls` as needed)
+- `ingress.enabled`: optional Ingress (defaults: frontend `starlight.local`, backend `stargate.local`)
+- `ingress.provider`: `traefik` (default, recommended) or `nginx` (retired community controller). See `deploy/MIGRATION.md`.
+- `ingress.className`: empty uses the provider default (`traefik` / `nginx`)
+- `ingress.annotations` / `ingress.tls`: extra annotations and TLS hosts as needed (`cert-manager.io/cluster-issuer` for ACME)
 - `resources.*`: set requests/limits for components (defaults provided)
 - `hpa.stargate`: optional HPA for Stargate (disabled by default)
 - `secrets.*`: optionally create/use a secret (`stargate-stack-secrets` with keys: `stargate-api-key`, `stargate-ingest-token`)
@@ -173,12 +176,18 @@ helm install stargate-stack . \
   --set secrets.stargateApiKey=true \
   --set secrets.stargateIngestToken=true
 
-# Enable ingress (example; update hosts/tls for your cluster)
+# Enable ingress (Traefik is the default provider; update hosts/tls for your cluster)
 helm upgrade --install stargate-stack . \
   --set ingress.enabled=true \
-  --set ingress.className=nginx
+  --set ingress.provider=traefik
 
-# For local ingress testing (docker-desktop/minikube with ingress-nginx), add to /etc/hosts:
+# Install the Traefik controller first (k3s: keep --disable=traefik, install via Helm):
+#   helm upgrade --install traefik traefik/traefik \
+#     --namespace traefik --create-namespace \
+#     --version 41.2.0 -f deploy/traefik-values.yaml
+# Full cutover from retired ingress-nginx: see deploy/MIGRATION.md
+
+# For local ingress testing, add to /etc/hosts:
 # 127.0.0.1 starlight.local stargate.local
 # TLS: default values expect a secret `stargate-stack-tls` with SANs starlight.local, stargate.local
 #   kubectl create secret tls stargate-stack-tls --cert=stargate-stack.crt --key=stargate-stack.key
@@ -205,6 +214,21 @@ kubectl port-forward svc/stargate 3001:3001 &
 # Test health endpoint
 curl http://localhost:3001/api/health
 ```
+
+## Upgrading to chart 0.3.x (Traefik ingress)
+
+Chart **0.3.0** defaults `ingress.provider` to `traefik` and stops assuming community ingress-nginx. HTTP(S) should be served by Traefik v3 (`deploy/traefik-values.yaml`). Dedicated LoadBalancer Services for IPFS swarm and btcd P2P are unchanged.
+
+If you still run ingress-nginx:
+
+```bash
+helm upgrade starlight-stack . \
+  --set ingress.enabled=true \
+  --set ingress.provider=nginx \
+  --set ingress.className=nginx
+```
+
+To cut over a live cluster, follow **`deploy/MIGRATION.md`** (uninstall nginx → install Traefik → patch cert-manager ClusterIssuer → upgrade this chart). There is a short outage: k3s ServiceLB cannot bind :80/:443 for two controllers at once.
 
 ## Upgrading from chart 0.1.x (starlight-api removed)
 

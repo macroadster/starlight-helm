@@ -3,14 +3,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: stargate-stack
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    stargate.macroadster.io/ingress-provider: {{ include "stargate.ingress.provider" . }}
+  {{- with include "stargate.ingress.annotations" . }}
   annotations:
-{{- range $k, $v := .Values.ingress.annotations }}
-    {{ $k }}: {{ $v | quote }}
-{{- end }}
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
-{{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-{{- end }}
+  ingressClassName: {{ include "stargate.ingress.className" . }}
   rules:
   {{- if .Values.ingress.frontendHost }}
     - host: {{ .Values.ingress.frontendHost }}
@@ -22,7 +27,7 @@ spec:
               service:
                 name: stargate
                 port:
-                  number: 3001
+                  number: {{ .Values.stargate.port | default 3001 }}
   {{- end }}
   {{- if .Values.ingress.backendHost }}
     - host: {{ .Values.ingress.backendHost }}
@@ -34,7 +39,7 @@ spec:
               service:
                 name: stargate
                 port:
-                  number: 3001
+                  number: {{ .Values.stargate.port | default 3001 }}
   {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
