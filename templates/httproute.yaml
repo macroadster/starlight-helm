@@ -1,0 +1,38 @@
+{{- if and .Values.ingress.enabled (include "stargate.ingress.useGateway" .) }}
+{{- $gw := .Values.ingress.gateway | default dict }}
+{{- $sections := $gw.sectionNames | default dict }}
+{{- $hosts := compact (splitList "," (include "stargate.ingress.hosts" .)) }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: stargate-stack
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: httproute
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    stargate.macroadster.io/ingress-provider: gateway
+spec:
+  parentRefs:
+    - name: {{ $gw.name | default "traefik-gateway" }}
+      namespace: {{ $gw.namespace | default "traefik" }}
+      kind: Gateway
+      sectionName: {{ index $sections "https" | default "websecure" }}
+    - name: {{ $gw.name | default "traefik-gateway" }}
+      namespace: {{ $gw.namespace | default "traefik" }}
+      kind: Gateway
+      sectionName: {{ index $sections "http" | default "web" }}
+  {{- if $hosts }}
+  hostnames:
+    {{- range $hosts }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  rules:
+    - backendRefs:
+        - name: stargate
+          kind: Service
+          port: {{ .Values.stargate.port | default 3001 }}
+          weight: 1
+{{- end }}

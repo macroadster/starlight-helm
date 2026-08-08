@@ -183,11 +183,12 @@ hpa:
 
 ingress:
   enabled: false
-  # traefik = recommended (see deploy/MIGRATION.md). nginx = retired community controller.
+  # gateway = Gateway API HTTPRoute (recommended; see deploy/MIGRATION.md).
+  # traefik = Traefik Ingress. nginx = retired community controller.
   provider: traefik
-  # Empty => provider default (traefik | nginx). Override only if your class name differs.
+  # Empty => provider default (traefik | nginx). Unused when provider=gateway.
   className: ""
-  # Extra annotations merged on top of provider defaults.
+  # Extra annotations merged on top of provider defaults (Ingress providers only).
   # nginx defaults (ssl-redirect, proxy-body-size 10m, access-log) are injected when provider=nginx.
   # Traefik does HTTP→HTTPS redirect at the entrypoint; add cert-manager.io/cluster-issuer here if needed.
   annotations: {}
@@ -198,6 +199,22 @@ ingress:
       hosts:
         - starlight.local
         - stargate.local
+  # Used when provider=gateway. Gateway/GatewayClass are installed with Traefik
+  # (deploy/traefik-values.yaml); this chart only creates HTTPRoute + optional Certificate.
+  gateway:
+    name: traefik-gateway
+    namespace: traefik
+    sectionNames:
+      http: web
+      https: websecure
+    certificate:
+      # Create a cert-manager Certificate in gateway.namespace (same ns as the Gateway TLS secret).
+      create: false
+      secretName: stargate-stack-tls
+      issuerName: letsencrypt-prod
+      issuerKind: ClusterIssuer
+      # Empty => tls[].hosts excluding *.local
+      dnsNames: []
   ipfsSwarm:
     enabled: true
     port: 4001

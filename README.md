@@ -99,8 +99,9 @@ curl http://localhost:3001/api/health
 - `stargate.fundingApiBase`: funding API base URL
 - `stargate.ingestSyncInterval`: ingest sync interval (default `30s`)
 - `ingress.enabled`: optional Ingress (defaults: frontend `starlight.local`, backend `stargate.local`)
-- `ingress.provider`: `traefik` (default, recommended) or `nginx` (retired community controller). See `deploy/MIGRATION.md`.
-- `ingress.className`: empty uses the provider default (`traefik` / `nginx`)
+- `ingress.provider`: `gateway` (Gateway API HTTPRoute), `traefik` (Ingress, chart default), or `nginx` (retired). See `deploy/MIGRATION.md`.
+- `ingress.className`: empty uses the provider default (`traefik` / `nginx`); unused for `gateway`
+- `ingress.gateway.*`: HTTPRoute parent Gateway + optional cert-manager Certificate in that namespace
 - `ingress.annotations` / `ingress.tls`: extra annotations and TLS hosts as needed (`cert-manager.io/cluster-issuer` for ACME)
 - `resources.*`: set requests/limits for components (defaults provided)
 - `hpa.stargate`: optional HPA for Stargate (disabled by default)
@@ -176,10 +177,13 @@ helm install stargate-stack . \
   --set secrets.stargateApiKey=true \
   --set secrets.stargateIngestToken=true
 
-# Enable ingress (Traefik is the default provider; update hosts/tls for your cluster)
+# Enable ingress via Gateway API HTTPRoute (after Traefik Gateway is installed)
 helm upgrade --install stargate-stack . \
   --set ingress.enabled=true \
-  --set ingress.provider=traefik
+  --set ingress.provider=gateway
+
+# Or keep the older Ingress object on Traefik:
+#   --set ingress.provider=traefik --set ingress.className=traefik
 
 # Install the Traefik controller first (k3s: keep --disable=traefik, install via Helm):
 #   helm upgrade --install traefik traefik/traefik \
@@ -214,6 +218,12 @@ kubectl port-forward svc/stargate 3001:3001 &
 # Test health endpoint
 curl http://localhost:3001/api/health
 ```
+
+## Upgrading to chart 0.4.x (Gateway API)
+
+Chart **0.4.0** adds `ingress.provider: gateway`, which renders an `HTTPRoute` (and optional cert-manager `Certificate` in the Gateway namespace) instead of a Kubernetes `Ingress`. Traefik stays the data plane — enable `providers.kubernetesGateway` via `deploy/traefik-values.yaml` after installing Gateway API CRDs. Full steps: **`deploy/MIGRATION.md` §5**.
+
+Chart default remains `provider: traefik` so existing Ingress installs keep working.
 
 ## Upgrading to chart 0.3.x (Traefik ingress)
 

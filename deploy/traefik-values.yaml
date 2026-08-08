@@ -8,8 +8,9 @@
 #     -f deploy/traefik-values.yaml
 #
 # On k3s this expects `--disable=traefik` so the bundled controller is not running.
-# HTTP→HTTPS redirect is done at the entrypoint (no app Ingress annotations needed).
-# Existing cert-manager TLS secrets on Ingress.spec.tls continue to work.
+# HTTP→HTTPS redirect is done at the entrypoint (ACME HTTP-01 is bypassed).
+# Gateway API: install standard CRDs first (see deploy/MIGRATION.md).
+# Listener ports must equal entrypoint bind ports AND be 80/443 for cert-manager.
 
 image:
   tag: v3.7.10
@@ -17,6 +18,14 @@ image:
 deployment:
   replicas: 1
   kind: Deployment
+
+# Non-root + bind :80/:443 (required so Gateway listeners can use those ports).
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+    add: [NET_BIND_SERVICE]
+  readOnlyRootFilesystem: true
 
 ingressClass:
   enabled: true
@@ -35,18 +44,46 @@ providers:
     publishedService:
       enabled: true
   kubernetesGateway:
-    enabled: false
-  # Optional compat: serve leftover Ingress objects that still use class "nginx"
-  # after the community controller is gone. Leave off once starlight-stack uses
-  # provider=traefik.
+    enabled: true
+    experimentalChannel: false
+    statusAddress:
+      service:
+        enabled: true
   kubernetesIngressNGINX:
     enabled: false
 
+gatewayClass:
+  enabled: true
+  name: traefik
+
+gateway:
+  enabled: true
+  name: traefik-gateway
+  listeners:
+    web:
+      port: 80
+      protocol: HTTP
+      namespacePolicy:
+        from: All
+    websecure:
+      port: 443
+      protocol: HTTPS
+      mode: Terminate
+      namespacePolicy:
+        from: All
+      certificateRefs:
+        - name: stargate-stack-tls
+          kind: Secret
+          group: ""
+
 ports:
   web:
+    port: 80
     expose:
       default: true
     exposedPort: 80
+    # Let cert-manager HTTP-01 hit :80 without the forced HTTPS redirect.
+    allowACMEByPass: true
     http:
       redirections:
         entryPoint:
@@ -54,6 +91,7 @@ ports:
           scheme: https
           permanent: true
   websecure:
+    port: 443
     expose:
       default: true
     exposedPort: 443

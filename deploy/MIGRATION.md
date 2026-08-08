@@ -87,9 +87,67 @@ Restore ingress-nginx from the last known values (see `/home/eric/exports/ingres
 
 ## Chart values
 
-- `ingress.provider`: `traefik` (default) or `nginx`
-- `ingress.className`: empty → provider default (`traefik` / `nginx`)
+- `ingress.provider`: `gateway` (HTTPRoute), `traefik` (Ingress, chart default), or `nginx`
+- `ingress.className`: empty → provider default (`traefik` / `nginx`); unused for `gateway`
+- `ingress.gateway.*`: HTTPRoute parentRefs + optional cert-manager Certificate in the Gateway namespace
 - `ingress.annotations`: merged on top of nginx defaults when `provider=nginx`
 - `ingress.*.tcpConfigMap.create`: nginx-only leftover; ignored unless `provider=nginx`
 
-Gateway API is not enabled yet (`providers.kubernetesGateway.enabled=false`). Traefik can grow into that later without another controller swap.
+## 5. Gateway API (HTTPRoute) on the same Traefik
+
+No second controller. Install standard Gateway API CRDs, turn on Traefik's Gateway provider + cert-manager's Gateway shim, copy the existing TLS secret into `traefik`, then switch the app chart to `provider: gateway`.
+
+```bash
+# CRDs (standard channel)
+kubectl apply --server-side -f \
+  https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml
+
+# cert-manager 1.19.x: enable Gateway API then restart (checked only at startup)
+helm upgrade cert-manager jetstack/cert-manager \
+  --namespace cert-manager --version v1.19.3 \
+  --reuse-values -f deploy/cert-manager-gateway.yaml
+kubectl rollout restart deployment/cert-manager -n cert-manager
+kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
+
+# TLS secret the Gateway HTTPS listener will terminate
+kubectl get secret stargate-stack-tls -n default -o yaml \
+  | sed 's/namespace: default/namespace: traefik/' \
+  | grep -v '^\s*resourceVersion:' \
+  | grep -v '^\s*uid:' \
+  | grep -v '^\s*creationTimestamp:' \
+  | kubectl apply -f -
+
+# Traefik: bind :80/:443, enable Gateway + HTTP-01 bypass
+helm upgrade traefik traefik/traefik \
+  --namespace traefik --version 41.2.0 \
+  -f deploy/traefik-values.yaml \
+  --wait --timeout 8m
+
+kubectl -n traefik get gateway,gatewayclass
+# Gateway listeners should show Accepted=True once the secret exists
+
+# App: HTTPRoute + Certificate in traefik ns; Ingress is removed
+# values-local.yaml:
+#   ingress.provider: gateway
+#   ingress.gateway.certificate.create: true
+helm upgrade starlight-stack . -f values-local.yaml --force-conflicts
+
+# ACME renewals via Gateway HTTPRoute (HTTP listener on port 80)
+kubectl patch clusterissuer letsencrypt-prod --type=json -p='[
+  {"op":"replace","path":"/spec/acme/solvers/0/http01","value":{
+    "gatewayHTTPRoute":{
+      "parentRefs":[{"name":"traefik-gateway","namespace":"traefik","kind":"Gateway"}]
+    }
+  }}
+]'
+```
+
+Verify:
+
+```bash
+kubectl get httproute,gateway -A
+curl -sS -o /dev/null -w '%{http_code}\n' http://<lb-ip>/ -H 'Host: starlight-ai.freemyip.com'  # 301
+curl -skS -o /dev/null -w '%{http_code}\n' https://starlight-ai.freemyip.com/                   # 200
+```
+
+Rollback to Ingress: set `ingress.provider: traefik`, helm upgrade the app, then disable `providers.kubernetesGateway` if desired. The Kubernetes Ingress provider stays enabled so that rollback does not need a Traefik reinstall.

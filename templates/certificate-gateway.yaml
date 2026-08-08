@@ -1,0 +1,31 @@
+{{- if and .Values.ingress.enabled (include "stargate.ingress.useGateway" .) }}
+{{- $gw := .Values.ingress.gateway | default dict }}
+{{- $cert := $gw.certificate | default dict }}
+{{- if $cert.create }}
+{{- $dns := compact (splitList "," (include "stargate.ingress.certificateHosts" .)) }}
+{{- if not $dns }}
+{{- fail "ingress.gateway.certificate.create requires tls.hosts (non-.local) or gateway.certificate.dnsNames" }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $cert.secretName | default "stargate-stack-tls" }}
+  namespace: {{ $gw.namespace | default "traefik" }}
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: tls
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  secretName: {{ $cert.secretName | default "stargate-stack-tls" }}
+  issuerRef:
+    name: {{ $cert.issuerName | default "letsencrypt-prod" }}
+    kind: {{ $cert.issuerKind | default "ClusterIssuer" }}
+    group: cert-manager.io
+  dnsNames:
+    {{- range $dns }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}
