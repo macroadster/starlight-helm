@@ -111,8 +111,10 @@ spec:
               value: {{ .Values.stargate.ipfs.mirrorUploadEnabled | quote }}
             - name: IPFS_MIRROR_DOWNLOAD_ENABLED
               value: {{ .Values.stargate.ipfs.mirrorDownloadEnabled | quote }}
+            {{- if .Values.stargate.ipfs.apiUrl }}
             - name: IPFS_API_URL
               value: {{ .Values.stargate.ipfs.apiUrl | quote }}
+            {{- end }}
             - name: IPFS_MIRROR_TOPIC
               value: {{ .Values.stargate.ipfs.mirrorTopic | quote }}
             - name: IPFS_MIRROR_POLL_INTERVAL_SEC

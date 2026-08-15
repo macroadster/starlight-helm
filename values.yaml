@@ -101,7 +101,8 @@ stargate:
     mirrorEnabled: false
     mirrorUploadEnabled: true
     mirrorDownloadEnabled: true
-    apiUrl: "http://stargate-ipfs:5001"
+    # Optional Kubo HTTP API. Empty = embedded node only (Kubo sidecar retired).
+    apiUrl: ""
     mirrorTopic: "stargate-uploads"
     mirrorPollIntervalSec: 10
     mirrorPublishIntervalSec: 30
@@ -133,8 +134,10 @@ stargate:
   fundingApiBase: ""
   ingestSyncInterval: "30s"
 
+# Optional Kubo sidecar. Disabled by default — Stargate embeds a libp2p/IPFS
+# node. Enabling this recreates Service/PVC stargate-ipfs (legacy).
 ipfs:
-  enabled: true
+  enabled: false
   enablePubsub: true
   routing: dhtclient
   profile: lowpower

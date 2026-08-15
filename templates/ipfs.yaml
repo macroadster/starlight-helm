@@ -1,3 +1,8 @@
+{{/*
+Optional Kubo sidecar. Off by default (ipfs.enabled=false).
+Stargate's embedded IPFS node is the supported path; this template is
+kept only for operators who still want a standalone Kubo daemon.
+*/}}
 {{- if .Values.ipfs.enabled }}
 apiVersion: apps/v1
 kind: Deployment
