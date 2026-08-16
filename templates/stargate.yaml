@@ -117,6 +117,14 @@ spec:
             {{- end }}
             - name: IPFS_MIRROR_TOPIC
               value: {{ .Values.stargate.ipfs.mirrorTopic | quote }}
+            - name: IPFS_WISH_TOPIC
+              value: {{ .Values.stargate.ipfs.wishTopic | default "stargate-wishes" | quote }}
+            - name: IPFS_WISH_TTL
+              value: {{ .Values.stargate.ipfs.wishTTL | default "168h" | quote }}
+            - name: IPFS_WISH_GC_INTERVAL_SEC
+              value: {{ .Values.stargate.ipfs.wishGCIntervalSec | default 3600 | quote }}
+            - name: IPFS_IDENTITY_FILE
+              value: {{ .Values.stargate.ipfs.identityFile | default (printf "%s/ipfs_identity.key" (.Values.stargate.dataDir | default "/data")) | quote }}
             - name: IPFS_MIRROR_POLL_INTERVAL_SEC
               value: {{ .Values.stargate.ipfs.mirrorPollIntervalSec | quote }}
             - name: IPFS_MIRROR_PUBLISH_INTERVAL_SEC

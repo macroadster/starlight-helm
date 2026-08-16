@@ -104,6 +104,10 @@ stargate:
     # Optional Kubo HTTP API. Empty = embedded node only (Kubo sidecar retired).
     apiUrl: ""
     mirrorTopic: "stargate-uploads"
+    wishTopic: "stargate-wishes"
+    wishTTL: "168h"
+    wishGCIntervalSec: 3600
+    identityFile: ""   # empty = $STARGATE_DATA_DIR/ipfs_identity.key
     mirrorPollIntervalSec: 10
     mirrorPublishIntervalSec: 30
     mirrorMaxFiles: 2000
