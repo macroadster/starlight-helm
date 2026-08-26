@@ -188,7 +188,7 @@ helm upgrade --install stargate-stack . \
 # Install the Traefik controller first (k3s: keep --disable=traefik, install via Helm):
 #   helm upgrade --install traefik traefik/traefik \
 #     --namespace traefik --create-namespace \
-#     --version 41.2.0 -f deploy/traefik-values.yaml
+#     --version 41.3.0 -f deploy/traefik-values.yaml
 # Full cutover from retired ingress-nginx: see deploy/MIGRATION.md
 # Ingress 404 / scanner bans: values.yaml fail2ban.* + values-local.yaml; deploy/fail2ban/README.md
 

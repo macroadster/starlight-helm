@@ -1,10 +1,10 @@
 # Traefik Proxy v3 — replacement for retired kubernetes/ingress-nginx.
-# Chart: traefik/traefik 41.2.0 (app v3.7.10)
+# Chart: traefik/traefik 41.3.0 (app v3.7.11; image pin v3.7.12)
 #
 #   helm repo add traefik https://traefik.github.io/charts
 #   helm upgrade --install traefik traefik/traefik \
 #     --namespace traefik --create-namespace \
-#     --version 41.2.0 \
+#     --version 41.3.0 \
 #     -f deploy/traefik-values.yaml
 # Access-log hostPath (fail2ban) comes from values-local.yaml via
 #   ./deploy/fail2ban/install.sh --traefik
@@ -15,7 +15,7 @@
 # Listener ports must equal entrypoint bind ports AND be 80/443 for cert-manager.
 
 image:
-  tag: v3.7.10
+  tag: v3.7.12
 
 deployment:
   replicas: 1

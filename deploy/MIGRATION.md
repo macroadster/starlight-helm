@@ -24,7 +24,7 @@ helm repo add traefik https://traefik.github.io/charts
 helm repo update traefik
 
 # Pre-pull so the outage window is just pod start
-docker pull traefik:v3.7.10
+docker pull traefik:v3.7.12
 
 # Drop retired controller (frees the LoadBalancer host ports)
 helm uninstall ingress-nginx -n ingress-nginx
@@ -34,7 +34,7 @@ helm uninstall ingress-nginx -n ingress-nginx
 # and retry — leftover CRDs are fine.
 helm upgrade --install traefik traefik/traefik \
   --namespace traefik --create-namespace \
-  --version 41.2.0 \
+  --version 41.3.0 \
   -f deploy/traefik-values.yaml \
   --wait --timeout 8m
 ```
@@ -119,7 +119,7 @@ kubectl get secret stargate-stack-tls -n default -o yaml \
 
 # Traefik: bind :80/:443, enable Gateway + HTTP-01 bypass
 helm upgrade traefik traefik/traefik \
-  --namespace traefik --version 41.2.0 \
+  --namespace traefik --version 41.3.0 \
   -f deploy/traefik-values.yaml \
   --wait --timeout 8m
 

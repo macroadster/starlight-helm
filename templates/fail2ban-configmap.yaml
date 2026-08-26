@@ -65,7 +65,7 @@ data:
     }
   traefik-accesslog.yaml: |
     # Overlay for the Traefik chart (not this chart). Generated from fail2ban.accessLog.
-    #   helm upgrade traefik traefik/traefik -n traefik --version 41.2.0 \
+    #   helm upgrade traefik traefik/traefik -n traefik --version 41.3.0 \
     #     -f deploy/traefik-values.yaml -f <this file>
     deployment:
       additionalVolumes:
