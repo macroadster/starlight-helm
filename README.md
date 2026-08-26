@@ -190,6 +190,7 @@ helm upgrade --install stargate-stack . \
 #     --namespace traefik --create-namespace \
 #     --version 41.2.0 -f deploy/traefik-values.yaml
 # Full cutover from retired ingress-nginx: see deploy/MIGRATION.md
+# Ingress 404 / scanner bans: values.yaml fail2ban.* + values-local.yaml; deploy/fail2ban/README.md
 
 # For local ingress testing, add to /etc/hosts:
 # 127.0.0.1 starlight.local stargate.local
@@ -221,7 +222,7 @@ curl http://localhost:3001/api/health
 
 ## Upgrading to chart 0.4.x (Gateway API)
 
-Chart **0.4.0** adds `ingress.provider: gateway`, which renders an `HTTPRoute` (and optional cert-manager `Certificate` in the Gateway namespace) instead of a Kubernetes `Ingress`. Traefik stays the data plane — enable `providers.kubernetesGateway` via `deploy/traefik-values.yaml` after installing Gateway API CRDs. Full steps: **`deploy/MIGRATION.md` §5**.
+Chart **0.4.0** adds `ingress.provider: gateway`, which renders an `HTTPRoute` (and optional cert-manager `Certificate` in the Gateway namespace) instead of a Kubernetes `Ingress`. Traefik stays the data plane — enable `providers.kubernetesGateway` via `deploy/traefik-values.yaml` after installing Gateway API CRDs. Full steps: **`deploy/MIGRATION.md` §5**. Chart **0.4.2** adds optional host fail2ban (`fail2ban.*`, off by default; see `deploy/fail2ban/README.md`).
 
 Chart default remains `provider: traefik` so existing Ingress installs keep working.
 

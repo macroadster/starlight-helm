@@ -1,0 +1,81 @@
+{{- if .Values.fail2ban.enabled }}
+{{- $f2b := .Values.fail2ban }}
+{{- $log := $f2b.accessLog | default dict }}
+{{- $hostDir := $log.hostDir | default "/var/log/traefik" }}
+{{- $fileName := $log.fileName | default "access.log" }}
+{{- $logpath := printf "%s/%s" $hostDir $fileName }}
+{{- $uid := $log.traefikUid | default 65532 }}
+{{- $gid := $log.traefikGid | default 65532 }}
+{{- $ignore := $f2b.ignoreip | default "127.0.0.1/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16" }}
+{{- $j404 := $f2b.traefik404 | default dict }}
+{{- $jscan := $f2b.traefikScan | default dict }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-fail2ban
+  labels:
+    app.kubernetes.io/name: stargate-stack
+    app.kubernetes.io/component: fail2ban
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  host-dir: {{ $hostDir | quote }}
+  file-name: {{ $fileName | quote }}
+  traefik-uid: {{ $uid | quote }}
+  traefik-gid: {{ $gid | quote }}
+  traefik-404.conf: |
+{{ .Files.Get "files/fail2ban/filter.d/traefik-404.conf" | nindent 4 }}
+  traefik-scan.conf: |
+{{ .Files.Get "files/fail2ban/filter.d/traefik-scan.conf" | nindent 4 }}
+  traefik-ingress.local: |
+    # Rendered from chart values (override in values-local.yaml).
+    # Action: host nftables. backend=auto — file log, not journald.
+    [traefik-404]
+    enabled  = true
+    port     = http,https
+    filter   = traefik-404
+    logpath  = {{ $logpath }}
+    backend  = auto
+    maxretry = {{ $j404.maxretry | default 20 }}
+    findtime = {{ $j404.findtime | default "120" }}
+    bantime  = {{ $j404.bantime | default "1h" }}
+    ignoreip = {{ $ignore }}
+
+    [traefik-scan]
+    enabled  = true
+    port     = http,https
+    filter   = traefik-scan
+    logpath  = {{ $logpath }}
+    backend  = auto
+    maxretry = {{ $jscan.maxretry | default 5 }}
+    findtime = {{ $jscan.findtime | default "10m" }}
+    bantime  = {{ $jscan.bantime | default "24h" }}
+    ignoreip = {{ $ignore }}
+  logrotate-traefik: |
+    {{ $hostDir }}/*.log {
+        daily
+        rotate 14
+        compress
+        delaycompress
+        missingok
+        notifempty
+        copytruncate
+        su {{ $uid }} {{ $gid }}
+    }
+  traefik-accesslog.yaml: |
+    # Overlay for the Traefik chart (not this chart). Generated from fail2ban.accessLog.
+    #   helm upgrade traefik traefik/traefik -n traefik --version 41.2.0 \
+    #     -f deploy/traefik-values.yaml -f <this file>
+    deployment:
+      additionalVolumes:
+        - name: access-logs
+          hostPath:
+            path: {{ $hostDir }}
+            type: DirectoryOrCreate
+    additionalVolumeMounts:
+      - name: access-logs
+        mountPath: {{ $hostDir }}
+    accessLog:
+      filePath: {{ $logpath }}
+{{- end }}

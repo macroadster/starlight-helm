@@ -1,0 +1,9 @@
+4.204.200.136 - - [26/Aug/2026:13:49:06 +0000] "GET /this_is_a_new_hello_world.php HTTP/1.1" 404 19 "-" "-" 21507 "-" "-" 0ms
+4.204.200.136 - - [26/Aug/2026:13:49:07 +0000] "GET /wp-login.php HTTP/1.1" 404 19 "-" "-" 21513 "-" "-" 0ms
+4.204.200.136 - - [26/Aug/2026:13:49:07 +0000] "GET /wp-admin/css/colors/modern/ HTTP/1.1" 404 19 "-" "-" 21527 "-" "-" 0ms
+4.204.200.136 - - [26/Aug/2026:13:49:08 +0000] "GET /.env HTTP/1.1" 404 19 "-" "-" 21528 "-" "-" 0ms
+43.130.67.6 - - [26/Aug/2026:14:21:33 +0000] "GET / HTTP/1.1" 404 19 "-" "-" 21572 "-" "-" 0ms
+172.88.171.129 - - [26/Aug/2026:14:00:52 +0000] "GET /api/ipfs-mirror/status HTTP/2.0" 200 687 "-" "-" 21529 "httproute-default-stargate-stack-gw-traefik-traefik-gateway-ep-websecure-0-ba9e21b1c9b37859f424@kubernetesgateway" "http://10.42.0.85:3001" 1ms
+192.168.1.1 - - [26/Aug/2026:14:00:52 +0000] "GET / HTTP/2.0" 200 1845 "-" "-" 21530 "httproute-default-stargate-stack-gw-traefik-traefik-gateway-ep-websecure-0-ba9e21b1c9b37859f424@kubernetesgateway" "http://10.42.0.85:3001" 1ms
+10.42.0.1 - - [26/Aug/2026:14:00:53 +0000] "GET /.well-known/acme-challenge/abc HTTP/1.1" 404 19 "-" "-" 21580 "-" "-" 0ms
+192.168.1.1 - - [26/Aug/2026:14:10:00 +0000] "GET /api/does-not-exist HTTP/2.0" 404 19 "-" "-" 21590 "httproute-default-stargate-stack-gw-traefik-traefik-gateway-ep-websecure-0-ba9e21b1c9b37859f424@kubernetesgateway" "http://10.42.0.85:3001" 2ms

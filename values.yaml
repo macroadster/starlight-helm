@@ -268,3 +268,24 @@ ingress:
 #   crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
 ca:
   crt: ""
+
+# Host fail2ban for Traefik ingress 404s / scanners.
+# Templates + default thresholds are committed; enable and set host
+# paths in values-local.yaml. Host install: deploy/fail2ban/install.sh
+# (renders locally; helm upgrade of this chart owns the ConfigMap).
+fail2ban:
+  enabled: false
+  accessLog:
+    hostDir: /var/log/traefik
+    fileName: access.log
+    traefikUid: 65532
+    traefikGid: 65532
+  ignoreip: "127.0.0.1/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
+  traefik404:
+    maxretry: 20
+    findtime: "120"
+    bantime: "1h"
+  traefikScan:
+    maxretry: 5
+    findtime: "10m"
+    bantime: "24h"

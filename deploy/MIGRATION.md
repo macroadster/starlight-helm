@@ -83,7 +83,7 @@ curl -skS -o /dev/null -w '%{http_code}\n' https://starlight-ai.freemyip.com/   
 
 ## Rollback
 
-Restore ingress-nginx from the last known values (see `/home/eric/exports/ingress-nginx-backup-*` on this host), switch `ingress.provider`/`className` back to `nginx`, and revert the ClusterIssuer class to `nginx`. Uninstall Traefik first so :80/:443 are free.
+Restore ingress-nginx from your last known helm values backup, switch `ingress.provider`/`className` back to `nginx`, and revert the ClusterIssuer class to `nginx`. Uninstall Traefik first so :80/:443 are free.
 
 ## Chart values
 
@@ -151,3 +151,26 @@ curl -skS -o /dev/null -w '%{http_code}\n' https://starlight-ai.freemyip.com/   
 ```
 
 Rollback to Ingress: set `ingress.provider: traefik`, helm upgrade the app, then disable `providers.kubernetesGateway` if desired. The Kubernetes Ingress provider stays enabled so that rollback does not need a Traefik reinstall.
+
+## 6. Fail2ban on ingress 404s
+
+Host fail2ban tails Traefik access logs and bans scanner IPs at nftables
+(same daemon as the `sshd` jail). Jail `ignoreip` skips LAN/RFC1918.
+The `traefik-404` filter ignores ACME HTTP-01 and only matches unrouted
+404s (`router="-"`). `traefik-scan` still matches backend 404s on
+scanner paths.
+
+Local knobs (`fail2ban.enabled`, host log path) go in
+`values-local.yaml` (gitignored). Filters, jail defaults, and the
+ConfigMap template are committed with the chart. `install.sh` renders
+locally and copies onto the host; `helm upgrade` of this chart owns the
+in-cluster ConfigMap.
+
+```bash
+# values-local.yaml: fail2ban.enabled: true
+./deploy/fail2ban/install.sh          # render locally → host fail2ban
+./deploy/fail2ban/install.sh --traefik  # first time: Traefik file access logs
+helm upgrade --install starlight-stack . -f values-local.yaml
+```
+
+Details: **`deploy/fail2ban/README.md`**.

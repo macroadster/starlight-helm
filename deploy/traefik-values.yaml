@@ -6,6 +6,8 @@
 #     --namespace traefik --create-namespace \
 #     --version 41.2.0 \
 #     -f deploy/traefik-values.yaml
+# Access-log hostPath (fail2ban) comes from values-local.yaml via
+#   ./deploy/fail2ban/install.sh --traefik
 #
 # On k3s this expects `--disable=traefik` so the bundled controller is not running.
 # HTTP→HTTPS redirect is done at the entrypoint (ACME HTTP-01 is bypassed).
