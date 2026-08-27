@@ -69,6 +69,22 @@ spec:
             - name: BTCD_P2P_LISTEN
               value: {{ $btcd.p2pListen | quote }}
             {{- end }}
+            {{- if $btcd.noListen }}
+            - name: BTCD_NOLISTEN
+              value: "true"
+            {{- end }}
+            {{- if $btcd.connect }}
+            - name: BTCD_CONNECT
+              value: {{ $btcd.connect | quote }}
+            {{- end }}
+            {{- if $btcd.addPeer }}
+            - name: BTCD_ADDPEER
+              value: {{ $btcd.addPeer | quote }}
+            {{- end }}
+            {{- if hasKey $btcd "minPeers" }}
+            - name: BTCD_MIN_PEERS
+              value: {{ $btcd.minPeers | quote }}
+            {{- end }}
             - name: BTCD_TXINDEX
               value: {{ ($btcd.txIndex | default true) | quote }}
             - name: BTCD_ADDRINDEX
@@ -78,6 +94,10 @@ spec:
             {{- if $btcd.extraArgs }}
             - name: BTCD_EXTRA_ARGS
               value: {{ $btcd.extraArgs | quote }}
+            {{- end }}
+            {{- if .Values.stargate.settlementConfirmations }}
+            - name: CHAIN_SETTLEMENT_CONFIRMATIONS
+              value: {{ .Values.stargate.settlementConfirmations | quote }}
             {{- end }}
             - name: BLOCKS_DIR
               value: {{ printf "%s/blocks" (.Values.stargate.dataDir | default "/data") | quote }}
