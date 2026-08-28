@@ -30,7 +30,11 @@ data:
 {{ .Files.Get "files/fail2ban/filter.d/traefik-scan.conf" | nindent 4 }}
   traefik-ingress.local: |
     # Rendered from chart values (override in values-local.yaml).
-    # Action: host nftables. backend=auto — file log, not journald.
+    # backend=auto — file log, not journald.
+    # Ban on filter/prerouting priority -150 (before kube-proxy/svclb
+    # DNAT). Default nftables hook is input, which never sees hostPort
+    # 80/443. Distinct chain names so these jails do not share sshd's
+    # f2b-chain.
     [traefik-404]
     enabled  = true
     port     = http,https
@@ -41,6 +45,8 @@ data:
     findtime = {{ $j404.findtime | default "120" }}
     bantime  = {{ $j404.bantime | default "1h" }}
     ignoreip = {{ $ignore }}
+    actionstart_on_demand = false
+    action   = nftables[type=multiport, port="http,https", protocol="tcp", chain="f2b-prerouting-traefik-404", chain_type="filter", chain_hook="prerouting", chain_priority="-150", blocktype="counter drop"]
 
     [traefik-scan]
     enabled  = true
@@ -52,6 +58,8 @@ data:
     findtime = {{ $jscan.findtime | default "10m" }}
     bantime  = {{ $jscan.bantime | default "24h" }}
     ignoreip = {{ $ignore }}
+    actionstart_on_demand = false
+    action   = nftables[type=multiport, port="http,https", protocol="tcp", chain="f2b-prerouting-traefik-scan", chain_type="filter", chain_hook="prerouting", chain_priority="-150", blocktype="counter drop"]
   logrotate-traefik: |
     {{ $hostDir }}/*.log {
         daily

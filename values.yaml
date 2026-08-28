@@ -273,6 +273,8 @@ ca:
 # Templates + default thresholds are committed; enable and set host
 # paths in values-local.yaml. Host install: deploy/fail2ban/install.sh
 # (renders locally; helm upgrade of this chart owns the ConfigMap).
+# Jails drop on nftables filter/prerouting -150 so svclb hostPort
+# 80/443 is banned before DNAT (INPUT never sees that path).
 fail2ban:
   enabled: false
   accessLog:

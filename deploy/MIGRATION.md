@@ -155,7 +155,8 @@ Rollback to Ingress: set `ingress.provider: traefik`, helm upgrade the app, then
 ## 6. Fail2ban on ingress 404s
 
 Host fail2ban tails Traefik access logs and bans scanner IPs at nftables
-(same daemon as the `sshd` jail). Jail `ignoreip` skips LAN/RFC1918.
+(same daemon as the `sshd` jail) on **prerouting** (before svclb DNAT).
+Jail `ignoreip` skips LAN/RFC1918.
 The `traefik-404` filter ignores ACME HTTP-01 and only matches unrouted
 404s (`router="-"`). `traefik-scan` still matches backend 404s on
 scanner paths.

@@ -4,6 +4,11 @@ Host fail2ban jails that ban IPs flooding the Traefik Gateway with 404s
 (PHP/WordPress scanners, no-SNI probes). This is the host nftables
 fail2ban already used for `sshd`, not the Traefik middleware plugin.
 
+Bans use a dedicated `filter` chain on **prerouting priority -150**
+(before kube-proxy / k3s svclb DNAT). The default nftables `input`
+hook never sees `hostPort` 80/443, so a Ban there was cosmetic:
+Traefik kept logging 404s after the jail fired.
+
 Why not an HTTPRoute middleware? Unmatched scanner requests never hit
 the Stargate HTTPRoute (`router="-"` in the access log), so a route
 filter would miss the traffic we actually want to ban.
@@ -40,7 +45,9 @@ helm upgrade --install starlight-stack . -f values-local.yaml
 `install.sh` renders with `helm template` and copies keys to the host. It
 does not `kubectl apply` the ConfigMap — that would collide with
 `helm upgrade`. Re-run it after changing filters or `fail2ban.*` values.
-`install.sh` uses `docker nsenter` when you are not root.
+`install.sh` uses `docker nsenter` when you are not root. Jail/action
+hook changes require a fail2ban **restart** (reload keeps the old
+nftables chain); `install.sh` does that restart.
 
 If an older `install.sh` already applied the ConfigMap, delete or adopt it
 before the next app upgrade:
@@ -63,6 +70,11 @@ fail2ban-regex files/fail2ban/testdata/access.log \
 
 docker run --rm -i --privileged --pid=host alpine:3.20 \
   nsenter -t 1 -m -u -n -i -- fail2ban-client status traefik-404
+
+# hook must be prerouting, not input
+docker run --rm -i --privileged --pid=host alpine:3.20 \
+  nsenter -t 1 -m -u -n -i -- \
+  nft list chain inet f2b-table f2b-prerouting-traefik-404
 ```
 
 Unban: `fail2ban-client set traefik-404 unbanip A.B.C.D`

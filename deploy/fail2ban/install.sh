@@ -171,8 +171,21 @@ if [[ "${1:-}" == "--traefik" ]]; then
     --wait --timeout 8m
 fi
 
-echo "reloading fail2ban"
-nsenter_host fail2ban-client reload
+echo "restarting fail2ban (reload does not recreate nftables hooks)"
+# reload keeps the old action (input/f2b-chain). Restart so Traefik
+# jails attach to filter/prerouting. Then drop leftover input rules
+# that still reference the Traefik sets (sshd keeps f2b-chain).
+nsenter_host systemctl restart fail2ban
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  if nsenter_host fail2ban-client ping >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.5
+done
+while read -r hdl; do
+  [[ -n "$hdl" ]] || continue
+  nsenter_host nft delete rule inet f2b-table f2b-chain handle "$hdl" || true
+done < <(nsenter_host nft -a list chain inet f2b-table f2b-chain 2>/dev/null | sed -n 's/.*addr-set-traefik-.* handle \([0-9][0-9]*\).*/\1/p')
 nsenter_host fail2ban-client status
 nsenter_host fail2ban-client status traefik-404
 nsenter_host fail2ban-client status traefik-scan
