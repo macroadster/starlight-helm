@@ -47,9 +47,7 @@ curl http://localhost:3001/api/health
   - `stargate.btcd.bin`: path to btcd binary (image ships `/usr/local/bin/btcd`)
   - `stargate.btcd.dataDir`: empty → `{dataDir}/btcd` on the data PVC (**must persist**)
   - `stargate.btcd.rpcHost` / `rpcUser` / `rpcPass`: empty uses network defaults + auto auth file
-  - `stargate.btcd.p2pPort` / `p2pListen`: default listen is `127.0.0.1:48333` (no public inbound). Set `0.0.0.0:<port>` only if you want inbound; `p2pServiceEnabled: true` exposes it on the Service
-  - `stargate.btcd.noListen` / `connect` / `addPeer` / `minPeers`: pin outbound peers and refuse to treat a 0-peer node as synced
-  - `stargate.settlementConfirmations`: optional override for how many blocks must bury a funding tx before contracts confirm (stargate defaults: mainnet 6, testnet/signet 20)
+  - `stargate.btcd.p2pPort` / `p2pListen`: testnet4 default `48333`; set `p2pServiceEnabled: true` to expose on the ClusterIP Service
   - `ingress.btcdP2p.*`: optional LoadBalancer/NodePort (`stargate-btcd-p2p`) for **inbound** peers (mirrors `ingress.ipfsSwarm`); set `enabled: true` and ensure `p2pPort` > 0
   - `stargate.btcd.txIndex` / `addrIndex`: default `true` (required for historical txs / address UTXOs)
   - `stargate.btcd.allowMainnet`: default `false` (mainnet needs large disk + explicit opt-in)

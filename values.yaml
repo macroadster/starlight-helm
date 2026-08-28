@@ -53,29 +53,16 @@ stargate:
     rpcHost: ""
     rpcUser: ""
     rpcPass: ""
-    # P2P listen inside the container. Default is localhost so the pod is not
-    # an inbound eclipse surface; outbound to DNS seeds still works.
-    # Set 0.0.0.0:<port> only if you want inbound (also enable p2pServiceEnabled).
-    p2pListen: "127.0.0.1:48333"
+    # P2P listen inside the container (outbound works without Service exposure)
+    p2pListen: "0.0.0.0:48333"
     # Container/Service port for inbound P2P; set 0 to omit the port
     p2pPort: 48333
     # Expose P2P on the stargate Service (optional; peers can still dial out)
     p2pServiceEnabled: false
-    # --nolisten: no inbound P2P (implied when connect is non-empty)
-    noListen: false
-    # Exclusive peers (comma-separated host:port). Disables automatic peer discovery.
-    connect: ""
-    # Extra outbound peers (comma-separated host:port)
-    addPeer: ""
-    # Health/synced floor; 0-peer isolation is an eclipse precondition
-    minPeers: 1
     txIndex: true
     addrIndex: true
     allowMainnet: false
     extraArgs: ""
-  # Settlement: confirm contracts only after N blocks bury the funding tx.
-  # Empty uses stargate defaults (mainnet 6, testnet/signet 20, regtest 1).
-  settlementConfirmations: ""
   # Probes: startup must cover managed btcd RPC wait (up to ~2m) + app init.
   probes:
     startup:
