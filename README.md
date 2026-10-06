@@ -28,7 +28,8 @@ curl http://localhost:3001/api/health
 ## Requirements
 - Docker/Helm/Kubectl access to a cluster (kind/minikube/Docker Desktop OK).
 - Image available locally or in a registry:
-  - `stargate:latest` (built from `stargate/Dockerfile`) or `macroadster/stargate:v1`
+  - `ghcr.io/macroadster/stargate:2.7.0` (this chart's `appVersion`), or a local `stargate:latest`
+  - Chart default image remains `macroadster/stargate:v1`; override `image.stargate.repository` / `tag` for the GHCR release
 
 ## Values
 - `image.stargate.repository` / `tag`: Stargate image (default `macroadster/stargate:v1`)
@@ -47,7 +48,9 @@ curl http://localhost:3001/api/health
   - `stargate.btcd.bin`: path to btcd binary (image ships `/usr/local/bin/btcd`)
   - `stargate.btcd.dataDir`: empty → `{dataDir}/btcd` on the data PVC (**must persist**)
   - `stargate.btcd.rpcHost` / `rpcUser` / `rpcPass`: empty uses network defaults + auto auth file
-  - `stargate.btcd.p2pPort` / `p2pListen`: testnet4 default `48333`; set `p2pServiceEnabled: true` to expose on the ClusterIP Service
+  - `stargate.btcd.p2pPort` / `p2pListen`: default listen is `127.0.0.1:48333` (no public inbound). Set `0.0.0.0:<port>` only if you want inbound; `p2pServiceEnabled: true` exposes it on the Service
+  - `stargate.btcd.noListen` / `connect` / `addPeer` / `minPeers`: pin outbound peers and refuse to treat a 0-peer node as synced
+  - `stargate.settlementConfirmations`: optional override for how many blocks must bury a funding tx before contracts confirm (stargate defaults: mainnet 6, testnet/signet 20)
   - `ingress.btcdP2p.*`: optional LoadBalancer/NodePort (`stargate-btcd-p2p`) for **inbound** peers (mirrors `ingress.ipfsSwarm`); set `enabled: true` and ensure `p2pPort` > 0
   - `stargate.btcd.txIndex` / `addrIndex`: default `true` (required for historical txs / address UTXOs)
   - `stargate.btcd.allowMainnet`: default `false` (mainnet needs large disk + explicit opt-in)
@@ -92,7 +95,7 @@ curl http://localhost:3001/api/health
   - `ipfs.storageClass`: optional storage class for IPFS PVC
 - `stargate.claimTtlHours`: claim expiry window exposed to clients (default `72`)
 - `stargate.seedFixtures`: whether to load seed contracts/tasks on startup (default `false`)
-- `stargate.apiKey`: optional API key required via header `X-API-Key`
+- `stargate.apiKey`: retired. Stargate 2.7.0 ignores `STARGATE_API_KEY`. Issue keys with `POST /api/auth/challenge` + `POST /api/auth/verify`
 - `stargate.enableIngestSync`: enable ingestion sync (default `true`)
 - `stargate.enableFundingSync`: enable funding sync (default `true`)
 - `stargate.fundingProvider`: funding provider (default `blockstream`)
@@ -144,14 +147,11 @@ helm install stargate-stack . \
 ### Secret Keys
 | Secret Key | Used By | Purpose |
 |------------|----------|---------|
-| `stargate-api-key` | Stargate | API key via header `X-API-Key` |
+| `stargate-api-key` | unused | Retired. Stargate 2.7.0 does not read this key |
 | `stargate-ingest-token` | Stargate | Token for ingestion endpoints |
 
-### Development (simple demo key)
-```bash
-helm install stargate-stack . \
-  --set stargate.apiKey="demo-api-key"
-```
+### Development
+API keys are not seeded from the chart. Sign in with `POST /api/auth/challenge` and `POST /api/auth/verify`.
 
 ## Install
 ```bash
@@ -278,14 +278,7 @@ Set `stargate.seedFixtures: true` to load demo contracts/tasks when tables are e
 ## Troubleshooting
 
 ### 401 Unauthorized on API calls
-```bash
-# Confirm API key in secret and pod env
-kubectl get secret stargate-stack-secrets -o jsonpath='{.data.stargate-api-key}' | base64 -d; echo
-kubectl exec deployment/stargate -- env | grep STARGATE_API_KEY
-
-# Restart after secret changes
-kubectl rollout restart deployment/stargate
-```
+`STARGATE_API_KEY` is ignored. Create a key with `POST /api/auth/challenge` and `POST /api/auth/verify`, then send it as `Authorization: Bearer` or `X-API-Key`.
 
 ### Ingest token issues
 ```bash
