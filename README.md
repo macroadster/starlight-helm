@@ -45,7 +45,7 @@ curl http://localhost:3001/api/health
 - `stargate.bitcoinNetwork`: Bitcoin network (`testnet4` default; also `testnet`, `signet`, `mainnet`)
 - **btcd full node (no mining)** — Stargate manages `btcd` in the same container (see stargate ADR 0006):
   - `stargate.btcd.mode`: `managed` (default) | `external` | `off`
-  - `stargate.btcd.bin`: path to btcd binary (image ships `/usr/local/bin/btcd`)
+  - `stargate.btcd.bin`: `btcd` (default) uses the btcd embedded in the image, extracted to `{dataDir}/bin/btcd`; an absolute path is used as-is (images before the embed change shipped `/usr/local/bin/btcd`)
   - `stargate.btcd.dataDir`: empty → `{dataDir}/btcd` on the data PVC (**must persist**)
   - `stargate.btcd.rpcHost` / `rpcUser` / `rpcPass`: empty uses network defaults + auto auth file
   - `stargate.btcd.p2pPort` / `p2pListen`: default listen is `127.0.0.1:48333` (no public inbound). Set `0.0.0.0:<port>` only if you want inbound; `p2pServiceEnabled: true` exposes it on the Service
