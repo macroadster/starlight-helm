@@ -48,7 +48,10 @@ stargate:
   btcd:
     # managed = spawn btcd in-process container; external = BTCD_RPC_HOST only; off = Esplora fallback
     mode: managed
-    bin: /usr/local/bin/btcd
+    # Bare name "btcd" uses the btcd binary embedded in the stargate image
+    # (extracted to {dataDir}/bin/btcd). An absolute path is used as-is, and
+    # current images do not ship /usr/local/bin/btcd.
+    bin: btcd
     # Empty => {dataDir}/btcd on the data PVC (persists across restarts)
     dataDir: ""
     # Empty => network default (e.g. 127.0.0.1:48334 for testnet4)

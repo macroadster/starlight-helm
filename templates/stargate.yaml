@@ -46,7 +46,7 @@ spec:
             - name: BTCD_MODE
               value: {{ $btcd.mode | default "managed" | quote }}
             - name: BTCD_BIN
-              value: {{ $btcd.bin | default "/usr/local/bin/btcd" | quote }}
+              value: {{ $btcd.bin | default "btcd" | quote }}
             - name: BTCD_DATADIR
               {{- if $btcd.dataDir }}
               value: {{ $btcd.dataDir | quote }}
