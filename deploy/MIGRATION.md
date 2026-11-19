@@ -24,17 +24,18 @@ helm repo add traefik https://traefik.github.io/charts
 helm repo update traefik
 
 # Pre-pull so the outage window is just pod start
-docker pull traefik:v3.7.12
+docker pull traefik:v3.7.19
 
 # Drop retired controller (frees the LoadBalancer host ports)
 helm uninstall ingress-nginx -n ingress-nginx
 
-# Chart 41.x installs many CRDs first. Helm 4 may time out on the first
+# The chart installs many CRDs first. Helm 4 may time out on the first
 # attempt ("CRD not ready / InProgress"). Wait until they are Established
-# and retry — leftover CRDs are fine.
+# and retry — leftover CRDs are fine. On upgrade, apply CRDs before Helm:
+# helm show crds traefik/traefik --version 42.4.1 | kubectl apply --server-side --force-conflicts -f -
 helm upgrade --install traefik traefik/traefik \
   --namespace traefik --create-namespace \
-  --version 41.3.0 \
+  --version 42.4.1 \
   -f deploy/traefik-values.yaml \
   --wait --timeout 8m
 ```
@@ -100,12 +101,13 @@ No second controller. Install standard Gateway API CRDs, turn on Traefik's Gatew
 ```bash
 # CRDs (standard channel)
 kubectl apply --server-side -f \
-  https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.1/standard-install.yaml
+  https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.6.3/standard-install.yaml
 
-# cert-manager 1.19.x: enable Gateway API then restart (checked only at startup)
+# cert-manager: enable Gateway API then restart (checked only at startup).
+# Cluster is on v1.21.2. Do not pass an older --version here.
 helm upgrade cert-manager jetstack/cert-manager \
-  --namespace cert-manager --version v1.19.3 \
-  --reuse-values -f deploy/cert-manager-gateway.yaml
+  --namespace cert-manager --version v1.21.2 \
+  --reset-then-reuse-values -f deploy/cert-manager-gateway.yaml
 kubectl rollout restart deployment/cert-manager -n cert-manager
 kubectl rollout status deployment/cert-manager -n cert-manager --timeout=120s
 
@@ -119,7 +121,7 @@ kubectl get secret stargate-stack-tls -n default -o yaml \
 
 # Traefik: bind :80/:443, enable Gateway + HTTP-01 bypass
 helm upgrade traefik traefik/traefik \
-  --namespace traefik --version 41.3.0 \
+  --namespace traefik --version 42.4.1 \
   -f deploy/traefik-values.yaml \
   --wait --timeout 8m
 

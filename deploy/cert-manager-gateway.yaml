@@ -1,12 +1,15 @@
-# Overlay for the existing cert-manager 1.19.x release.
-# Gateway API CRDs must be installed first; restart cert-manager after applying.
+# Overlay for the cert-manager release on this cluster (v1.21.2).
+# Gateway API CRDs must be installed first; the controller reads this only at startup.
 #
 #   helm upgrade cert-manager jetstack/cert-manager \
 #     --namespace cert-manager \
-#     --version v1.19.3 \
-#     --reuse-values \
+#     --version v1.21.2 \
+#     --reset-then-reuse-values \
 #     -f deploy/cert-manager-gateway.yaml
 #   kubectl rollout restart deployment/cert-manager -n cert-manager
+#
+# enableGatewayAPI is deprecated in 1.21 in favor of gatewayAPI.enabled.
+# The old field is still honored.
 
 config:
   enableGatewayAPI: true

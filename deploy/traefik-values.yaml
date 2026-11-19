@@ -1,10 +1,10 @@
 # Traefik Proxy v3 — replacement for retired kubernetes/ingress-nginx.
-# Chart: traefik/traefik 41.3.0 (app v3.7.11; image pin v3.7.12)
+# Chart: traefik/traefik 42.4.1 (app v3.7.19)
 #
 #   helm repo add traefik https://traefik.github.io/charts
 #   helm upgrade --install traefik traefik/traefik \
 #     --namespace traefik --create-namespace \
-#     --version 41.3.0 \
+#     --version 42.4.1 \
 #     -f deploy/traefik-values.yaml
 # Access-log hostPath (fail2ban) comes from values-local.yaml via
 #   ./deploy/fail2ban/install.sh --traefik
@@ -15,7 +15,7 @@
 # Listener ports must equal entrypoint bind ports AND be 80/443 for cert-manager.
 
 image:
-  tag: v3.7.12
+  tag: v3.7.19
 
 deployment:
   replicas: 1
@@ -113,6 +113,19 @@ log:
 accessLog:
   enabled: true
   format: common
+
+# safeNaming stays false so existing generated CRD names do not change.
+# aliasHeadersStrategy is set on every entrypoint, including the built-in
+# traefik and metrics ports, which the per-port chart value does not cover.
+additionalArguments:
+  # Existing cluster: keep legacy generated CRD names.
+  - --providers.kubernetescrd.safeNaming=false
+  # Drop header-name aliases (X_Auth_User / X.Auth.User) so CGI/WSGI/PHP
+  # backends cannot be spoofed. Chart only knows underscoreHeadersStrategy.
+  - --entryPoints.web.http.aliasHeadersStrategy=delete
+  - --entryPoints.websecure.http.aliasHeadersStrategy=delete
+  - --entryPoints.traefik.http.aliasHeadersStrategy=delete
+  - --entryPoints.metrics.http.aliasHeadersStrategy=delete
 
 resources:
   requests:

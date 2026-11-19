@@ -165,7 +165,7 @@ if [[ "${1:-}" == "--traefik" ]]; then
   cm_key 'traefik-accesslog.yaml' > "$overlay"
   echo "upgrading Traefik with access-log overlay from values-local.yaml"
   helm upgrade traefik traefik/traefik \
-    --namespace traefik --version 41.3.0 \
+    --namespace traefik --version 42.1.3 \
     -f "${CHART_ROOT}/deploy/traefik-values.yaml" \
     -f "$overlay" \
     --wait --timeout 8m
