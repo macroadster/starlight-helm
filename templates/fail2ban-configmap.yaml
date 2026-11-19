@@ -69,11 +69,13 @@ data:
         missingok
         notifempty
         copytruncate
-        su {{ $uid }} {{ $gid }}
+        # no "su": copytruncate rewrites the file in place, so ownership is kept.
+        # logrotate's su needs a user *name* resolvable on the host, and the
+        # host has no account for the container uid (65532).
     }
   traefik-accesslog.yaml: |
     # Overlay for the Traefik chart (not this chart). Generated from fail2ban.accessLog.
-    #   helm upgrade traefik traefik/traefik -n traefik --version 41.3.0 \
+    #   helm upgrade traefik traefik/traefik -n traefik --version 42.1.3 \
     #     -f deploy/traefik-values.yaml -f <this file>
     deployment:
       additionalVolumes:
